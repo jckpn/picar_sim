@@ -1,7 +1,6 @@
-import pygame
-from utils import scale_coords
 import numpy as np
 import cv2
+from utils import get_picar_view
 
 
 class LaneController:
@@ -24,7 +23,7 @@ class LaneController:
         throttle = 1
 
         grid_size = 100
-        picar_view = get_picar_view(self.display, self.picar)
+        picar_view = get_picar_view(self.display)
         picar_view = cv2.resize(picar_view, (grid_size, grid_size))
 
         # filter out non-track stuff
@@ -52,6 +51,8 @@ class LaneController:
 
             if self.display_view:
                 self.display_view_cv2(picar_view, tracks, track_center, grid_size)
+            
+            steer = steer * 0.5 + 0.5
 
             a = self.smoothing ** (delta_time * 10)
             throttle, steer = (

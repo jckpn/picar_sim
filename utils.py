@@ -33,17 +33,13 @@ def scale_coords(tuple):
     return (tuple[0] * DISPLAY_SCALE, tuple[1] * DISPLAY_SCALE)
 
 
-def get_picar_view(display, picar):
-    view_size = 32
-    y_offset = -28  # to get picar out of view
-
+def get_picar_view(display, view_size=40, y_offset=-28):
     view_rect = (
-        picar.display_x - view_size // 2,
-        picar.display_y - view_size // 2 + y_offset,
-        view_size,
-        view_size,
+        display.get_width() // 2 - view_size * DISPLAY_SCALE // 2,
+        display.get_height() // 2 - view_size * DISPLAY_SCALE // 2 + y_offset,
+        view_size * DISPLAY_SCALE,
+        view_size 
     )
-    view_rect = scale_coords(*view_rect)
     view_surface = display.subsurface(view_rect).copy()
 
     # convert to cv2 image

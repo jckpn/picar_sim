@@ -1,4 +1,4 @@
-from objects import SimulatorObject
+from objects.base import SimulatorObject
 import numpy as np
 
 
