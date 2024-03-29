@@ -1,20 +1,29 @@
 import pygame
 import objects
-from controllers import KeyboardController, LaneController
+from controllers import KeyboardController, LaneController, CNNController
 from utils import scale_coords
 from constants import ENV_SIZE, TARGET_FPS, SPEED_MULTIPLIER
 
 
-track = objects.tracks.Figure8()
-picar = objects.Picar(center=(0, -20))
-environment = [track, picar, objects.obstacles.Wood()]
+track = objects.tracks.Junction()
+picar = objects.Picar()
+wood = objects.obstacles.Wood(center=(0, 80))
+obstacles = [
+    objects.obstacles.Wood(center=(-40, 20)),
+    objects.obstacles.Wood(center=(40, 20)),
+    wood
+]
+environment = [track, picar, *obstacles]
 perspective = picar
 
 
 pygame.init()
 clock = pygame.time.Clock()
 display = pygame.display.set_mode(scale_coords(ENV_SIZE))
-controller = LaneController(display, picar)
+# controller = CNNController(
+#     display, picar, steer_model_path="models/roadwarp-angle-32.h5"
+# )
+controller = KeyboardController()
 
 
 def simulation_loop():
@@ -32,6 +41,7 @@ def simulation_loop():
     pygame.display.update()
 
     # update picar controls
+    picar.get_state(environment)
     steer, throttle = controller.get_controls(dt)
     picar.set_controls(steer, throttle)
 

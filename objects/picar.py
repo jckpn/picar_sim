@@ -52,3 +52,14 @@ class Picar(SimulatorObject):
 
         self.throttle = new_throttle
         self.steer = new_steer
+    
+    def get_state(self, environment):
+        for obj in environment:
+            if obj == self:
+                continue
+            
+            distance = np.linalg.norm(
+                np.array(self.center) - np.array(obj.center)
+            )
+            
+            print(obj.__class__.__name__, distance)
