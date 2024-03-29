@@ -1,8 +1,7 @@
 from objects.base import SimObject
 import numpy as np
-import pygame
 import cv2
-from utils import scale_coords
+from utils import get_picar_view
 
 
 class Picar(SimObject):
@@ -82,37 +81,13 @@ class Picar(SimObject):
 
         return False
 
-    def get_view(self, display, view_size=40):
-        view_size = scale_coords(view_size)
-        y_offset = scale_coords(10)
-
-        view_rect = (
-            display.get_width() // 2 - view_size // 2,
-            display.get_height() // 2 - y_offset - view_size,
-            view_size,
-            view_size,
-        )
-
-        # capture rect and convert to cv2 image
-        view_cap = display.subsurface(view_rect).copy()
-        view_cap = pygame.surfarray.array3d(view_cap)
-        view_cap = np.rot90(view_cap)
-        view_cap = cv2.flip(view_cap, 0)
-        view_cap = cv2.cvtColor(view_cap, cv2.COLOR_RGB2BGR)
-
-        # show view
-        # cv2.imshow("view", view_cap)
-        pygame.draw.rect(display, (255, 0, 255), view_rect, 2)
-
-        return view_cap
-
     def get_state(self, display):
-        view = self.get_view(display)
-        
+        view = get_picar_view(display, view_size=40)
+
         view = cv2.erode(view, kernel=np.ones((3, 3)), iterations=2)
         view = cv2.resize(view, (32, 32), interpolation=cv2.INTER_NEAREST)
         view = cv2.resize(view, (200, 200), interpolation=cv2.INTER_NEAREST)
-        
+
         cv2.imshow("view", view)
 
         # # convert to grayscale

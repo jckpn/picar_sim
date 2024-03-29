@@ -2,12 +2,8 @@ import pygame
 
 
 class KeyboardController:
-    def get_controls(self):
+    def get_controls(self, throttle=0, steer=0.5):
         keys = pygame.key.get_pressed()
-
-        # defaults
-        throttle = 0
-        steer = 0.5
 
         if keys[pygame.K_UP]:
             throttle = 1
