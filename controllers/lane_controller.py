@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-from utils import get_picar_view
 
 
 class LaneController:
@@ -23,7 +22,7 @@ class LaneController:
         throttle = 1
 
         grid_size = 100
-        picar_view = get_picar_view(self.display)
+        picar_view = self.picar.get_view(self.display)
         picar_view = cv2.resize(picar_view, (grid_size, grid_size))
 
         # filter out non-track stuff

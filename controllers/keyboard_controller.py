@@ -2,7 +2,7 @@ import pygame
 
 
 class KeyboardController:
-    def get_controls(self, delta_time):
+    def get_controls(self):
         keys = pygame.key.get_pressed()
 
         # defaults

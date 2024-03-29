@@ -1,6 +1,5 @@
 import cv2
 import tensorflow as tf
-from utils import get_picar_view
 import numpy as np
 
 
@@ -37,7 +36,7 @@ class CNNController:
         throttle = 1
 
         # get picar view and erode to remove noise (+ make lines thicker)
-        picar_view = get_picar_view(self.display)
+        picar_view = self.picar.get_view(self.display)
         picar_view = cv2.erode(picar_view, kernel=np.ones((3, 3)), iterations=1)
         picar_view = cv2.resize(picar_view, (32, 32))
 

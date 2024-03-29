@@ -1,51 +1,39 @@
 import pygame
+import numpy as np
 from utils import scale_coords
 
 
-class SimulatorObject:
-    def __init__(self, center, size, direction, image_path):
-        self.center = center
-        self.size = size
-        self.direction = direction
-        self.image = self.load_image(image_path, size)
-
-    def load_image(self, path, size):
-        image = pygame.image.load(path)
-        image = pygame.transform.smoothscale(image, scale_coords(size))
-        return image
-
-    def update(self, delta_time):
-        pass
+class SimObject:  # TODO: inherit pygame sprite class?
+    def __init__(self, center, size, angle, image_path, can_collide=False):
+        self.center = np.array(center, dtype=float)
+        self.size = np.array(size, dtype=float)
+        self.angle = angle
+        self.image = pygame.transform.smoothscale(
+            pygame.image.load(image_path), scale_coords(self.size)
+        )
+        self.can_collide = can_collide
 
     def render(self, display, perspective):
-        win_center = (
-            display.get_width() // 2,
-            display.get_height() // 2,
-        )
+        angle = self.angle - perspective.angle
 
-        angle = self.direction - perspective.direction
-        rotated_image = pygame.transform.rotate(self.image, -angle)
+        image = pygame.transform.rotozoom(self.image, -angle, 1)
 
         # proper implementation should work for any object, but I've spent too long trying
         # so here's a janky soliution that works for picar or tracks only
         if perspective.__class__.__name__ == "Picar":
-            offset = pygame.math.Vector2(
-                *scale_coords(
-                    (
-                        self.center[0] - perspective.center[0],
-                        self.center[1] - perspective.center[1],
-                    )
+            offset = scale_coords(
+                (
+                    self.center[0] - perspective.center[0],
+                    self.center[1] - perspective.center[1],
                 )
             )
-            pivot = pygame.math.Vector2(*win_center)
-            rotated_offset = offset.rotate(angle)
-            rect = rotated_image.get_rect(center=pivot + rotated_offset)
+            offset = pygame.math.Vector2(offset).rotate(angle)
         else:
-            pivot = scale_coords(self.center)
-            pivot = (
-                pivot[0] + win_center[0],
-                pivot[1] + win_center[1],
-            )
-            rect = rotated_image.get_rect(center=pivot)
+            offset = scale_coords(self.center)
 
-        display.blit(rotated_image, rect)
+        rect = image.get_rect(center=offset)
+
+        # apply offset so (0, 0) is center of display
+        rect = rect.move((display.get_width() // 2, display.get_height() // 2))
+
+        display.blit(image, rect)
