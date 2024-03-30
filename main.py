@@ -4,52 +4,35 @@ import controllers
 from utils import scale_coords
 
 
-TARGET_FPS = 60
-SPEED_MULTIPLIER = 1.5
 ENV_SIZE = (350, 200)
 
-track = objects.tracks.Figure8()
-picar = objects.Picar()
-wood = objects.obstacles.Wood(center=(0, 80))
+track = objects.tracks.Oval()
+picar = objects.Picar(center=(0, -45), angle=-90)
+wood = objects.obstacles.Wood(center=(60, 80), size=(5, 5))
 obstacles = [
-    objects.obstacles.Wood(center=(-40, 20)),
-    objects.obstacles.Wood(center=(40, 20)),
     wood,
 ]
 environment = [track, picar, *obstacles]
 perspective = picar
 
 
-pygame.init()
-clock = pygame.time.Clock()
-display = pygame.display.set_mode(size=scale_coords(ENV_SIZE))
-cnn_controller = controllers.CNNController(display, picar)
-kb_controller = controllers.KeyboardController()  # override cnn_controller if needed
-
-
-def sim_loop():
-    # clear display
-    display.fill((255, 255, 255))
-
-    # render environment
-    for obj in environment:
-        obj.render(display, perspective)
-
+def sim_loop(
+    controller, display=None, clock=None, dt=0.1, speed_multiplier=1.0, max_fps=60
+):
     # update picar controls
-    # picar.get_state(display)
-    dt = clock.get_time() / 1000 * SPEED_MULTIPLIER
-    steer, throttle = cnn_controller.get_controls()
-    steer, throttle = kb_controller.get_controls(steer, throttle)
-    picar.set_controls(steer, throttle)
+    dt = clock.get_time() / 1000 * speed_multiplier if display and clock else dt
+
+    throttle, steer = controller.get_controls(dt)
+    picar.set_controls(throttle, steer)
     picar.update(dt)
 
-    pygame.display.update()
-    clock.tick(TARGET_FPS)
+    if display and clock:  # clear display and render environment
+        display.fill((255, 255, 255))
+        for obj in environment:
+            obj.render(display, perspective)
 
-
-def main():
-    while True:
-        sim_loop()
+        pygame.display.update()
+        clock.tick(max_fps)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -57,5 +40,16 @@ def main():
                 quit()
 
 
+def run_with_graphics():
+    pygame.init()
+
+    controller = controllers.KeyboardController()
+    display = pygame.display.set_mode(scale_coords(ENV_SIZE))
+    clock = pygame.time.Clock()
+
+    while True:
+        sim_loop(controller, display, clock, speed_multiplier=2.0)
+
+
 if __name__ == "__main__":
-    main()
+    run_with_graphics()

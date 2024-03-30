@@ -2,7 +2,7 @@ import pygame
 
 
 class KeyboardController:
-    def get_controls(self, throttle=0, steer=0.5):
+    def get_controls(self, dt):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP]:

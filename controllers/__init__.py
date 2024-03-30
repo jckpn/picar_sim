@@ -1,3 +1,4 @@
 from controllers.keyboard_controller import KeyboardController
 from controllers.lane_controller import LaneController
 from controllers.cnn_controller import CNNController
+from controllers.target_controller import TargetController

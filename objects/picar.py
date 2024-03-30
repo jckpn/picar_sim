@@ -38,6 +38,7 @@ class Picar(SimObject):
             * self.speed
             * delta_time
         )
+        self.angle %= 360
 
         # update acceleration
         self.accel = (
