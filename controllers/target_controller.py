@@ -2,9 +2,8 @@ import numpy as np
 
 
 class TargetController:
-    def __init__(self, picar, display):
+    def __init__(self, picar):
         self.picar = picar
-        self.display = display
 
         self.targets = []
 

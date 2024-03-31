@@ -22,7 +22,7 @@ def sim_loop(
     # update picar controls
     dt = clock.get_time() / 1000 * speed_multiplier if display and clock else dt
 
-    throttle, steer = controller.get_controls(dt)
+    throttle, steer = controller.get_controls()
     picar.set_controls(throttle, steer)
     picar.update(dt)
 
@@ -43,7 +43,14 @@ def sim_loop(
 def run_with_graphics():
     pygame.init()
 
-    controller = controllers.KeyboardController()
+    # controller = controllers.KeyboardController()
+    controller = controllers.TargetController(picar)
+    controller.targets = [
+        (-50, -50),
+        (50, -50),
+        (50, 50),
+        (-50, 50),
+    ]
     display = pygame.display.set_mode(scale_coords(ENV_SIZE))
     clock = pygame.time.Clock()
 
