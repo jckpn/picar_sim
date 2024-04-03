@@ -8,21 +8,12 @@ ENV_SIZE = (350, 200)
 
 track = objects.tracks.Oval()
 picar = objects.Picar(center=(0, -45), angle=-90)
-wood = objects.obstacles.Wood(center=(60, 80), size=(5, 5))
-obstacles = [
-    wood,
-]
-environment = [track, picar, *obstacles]
+environment = [track, picar]
 perspective = picar
 
 
-def sim_loop(
-    controller, display=None, clock=None, dt=0.1, speed_multiplier=1.0, max_fps=60
-):
-    # update picar controls
-    dt = clock.get_time() / 1000 * speed_multiplier if display and clock else dt
-
-    throttle, steer = controller.get_controls()
+def sim_loop(controller, display=None, clock=None, dt=0.1, max_fps=30):
+    throttle, steer = controller.get_controls(picar)
     picar.set_controls(throttle, steer)
     picar.update(dt)
 
@@ -44,18 +35,13 @@ def run_with_graphics():
     pygame.init()
 
     # controller = controllers.KeyboardController()
-    controller = controllers.TargetController(picar)
-    controller.targets = [
-        (-50, -50),
-        (50, -50),
-        (50, 50),
-        (-50, 50),
-    ]
+    controller = controllers.NeuroTargetController()
+    controller.targets = [(-50, -50), (50, -50), (50, 50), (-50, 50)]
     display = pygame.display.set_mode(scale_coords(ENV_SIZE))
     clock = pygame.time.Clock()
 
     while True:
-        sim_loop(controller, display, clock, speed_multiplier=2.0)
+        sim_loop(controller, display, clock, dt=0.01, max_fps=100)
 
 
 if __name__ == "__main__":
