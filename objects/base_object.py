@@ -3,13 +3,13 @@ import numpy as np
 from utils import scale_coords
 
 
-class SimObject:  # TODO: inherit pygame sprite class?
+class BaseObject:  # TODO: inherit pygame sprite class?
     def __init__(self, center, size, angle, image_path, can_collide=False):
         self.center = np.array(center, dtype=float)
         self.size = np.array(size, dtype=float)
         self.angle = angle
         self.image = pygame.transform.smoothscale(
-            pygame.image.load(image_path), scale_coords(self.size)
+            pygame.image.load(image_path), scale_coords(size)
         )
         self.can_collide = can_collide
 

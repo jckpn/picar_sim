@@ -1,8 +1,10 @@
-from objects.base import SimObject
+from objects.base_object import BaseObject
 
 
-class Track(SimObject):
-    def __init__(self, center=(0, 0), size=(300, 150), direction=0, image_path=None):
+class Track(BaseObject):
+    def __init__(
+        self, center=(0, 0), size=(300, 150), direction=0, image_path=None
+    ):
         super().__init__(center, size, direction, image_path)
 
 
