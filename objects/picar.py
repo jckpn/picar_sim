@@ -10,23 +10,22 @@ class Picar(BaseObject):
         angle=0,
         image_path="objects/assets/picar.png",
         can_collide=True,
-        smoothing=0.75,
     ):
         super().__init__(center, size, angle, image_path, can_collide)
-
-        self.smoothing = smoothing
 
         # controls
         self.throttle = 0.0
         self.steer = 0.5
 
-        # physics
-        self.steering_thing = 2  # ??
+        # ->
         self.speed = 0.0
-        self.max_speed = 30.0  # cm/s
         self.accel = 0.0
-        self.max_accel = 25.0  # cm/s^2
-        self.friction = 10.0  # cm/s^2
+
+        # constants
+        self.steering_thing = 2  # ??
+        self.max_speed = 35.0  # cm/s I think?
+        self.max_accel = 15.0  # cm/s^2
+        self.steer_smoothing = 0.75  # what amount of previous frame's controls to keep
 
     def update(self, delta_time):
         # update direction
@@ -36,7 +35,7 @@ class Picar(BaseObject):
         self.angle %= 360
 
         # update acceleration
-        self.accel = self.throttle * self.max_accel - self.friction
+        self.accel = (self.throttle * 2 - 1) * self.max_accel
         self.accel = np.clip(self.accel, -np.inf, self.max_accel)
 
         # update speed and velocity
@@ -56,7 +55,9 @@ class Picar(BaseObject):
         self.throttle = throttle
 
         # TODO: make smoothing time-based
-        self.steer = steer * (1 - self.smoothing) + self.steer * self.smoothing
+        self.steer = (
+            steer * (1 - self.steer_smoothing) + self.steer * self.steer_smoothing
+        )
 
     def check_for_collisions(self, environment):
         if not self.can_collide:

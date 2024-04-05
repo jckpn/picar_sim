@@ -5,7 +5,7 @@ import controllers
 def main():
     sim = scenes.Scene2(
         controller=controllers.KeyboardController(),
-        speed_multiplier=3.0,
+        speed_multiplier=2.0,
     )
 
     while True:
