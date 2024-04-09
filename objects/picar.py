@@ -1,82 +1,100 @@
-from objects.base_object import BaseObject
+from objects.base import SimulatorObject
 import numpy as np
+from controllers import KeyboardController
+from grid_state import GridState
 
 
-class Picar(BaseObject):
+class Picar(SimulatorObject):
     def __init__(
         self,
+        controller=KeyboardController(),
         center=(0, 0),
-        size=(17, 34),
+        size=(13, 26),
         angle=0,
         image_path="objects/assets/picar.png",
-        can_collide=True,
     ):
-        super().__init__(center, size, angle, image_path, can_collide)
+        super().__init__(center, size, angle, image_path, can_collide=True)
 
-        # controls
+        self.controller = controller
+
+        # variables set by controller each frame
+        self.controller_throttle = 0.0
+        self.controller_steer = 0.5
         self.throttle = 0.0
-        self.steer = 0.5
+        self.steer = 0.0
 
-        # ->
+        # dynamic variables
         self.speed = 0.0
-        self.accel = 0.0
+        self.wheel_angle = 0.0
 
-        # constants
-        self.steering_thing = 2  # ??
-        self.max_speed = 35.0  # cm/s I think?
-        self.max_accel = 15.0  # cm/s^2
-        self.steer_smoothing = 0.75  # what amount of previous frame's controls to keep
+        # constants -- these are total guesses atm
+        self.turning_radius = 15.0  # cm
+        self.max_speed = 30.0  # cm/s I think?
+        self.accel = 25.0  # cm/s^2
+        self.breaking_accel = 50.0  # breaking has faster accel
+        self.max_wheel_angle = 40  # degrees
+        self.wheel_actuation_speed = 160.0  # 40 / time it takes to turn wheel 0 -> 40
 
-    def update(self, delta_time):
-        # update direction
-        self.angle += (
-            (self.steer * 2 - 1) * self.steering_thing * self.speed * delta_time
+    def update(self, delta_time, objects):
+        # get controls from controller
+        throttle, steer = self.controller.get_controls()
+        self.set_controls(throttle, steer)
+
+        state = GridState()
+        state.fetch_state(self, objects)
+        state.print()
+
+        # controls -> physics
+        new_wheel_angle = (self.controller_steer * 2 - 1) * self.max_wheel_angle
+        if new_wheel_angle > self.wheel_angle:
+            self.wheel_angle += self.wheel_actuation_speed * delta_time
+            self.wheel_angle = min(self.wheel_angle, new_wheel_angle)  # don't overshoot
+        elif new_wheel_angle < self.wheel_angle:
+            self.wheel_angle -= self.wheel_actuation_speed * delta_time
+            self.wheel_angle = max(self.wheel_angle, new_wheel_angle)  # don't overshoot
+        self.wheel_angle = np.clip(
+            self.wheel_angle, -self.max_wheel_angle, self.max_wheel_angle
         )
-        self.angle %= 360
+        new_speed = self.controller_throttle * self.max_speed
+        if new_speed > self.speed:
+            self.speed += self.accel * delta_time
+        elif new_speed < self.speed:
+            self.speed -= self.breaking_accel * delta_time
+        self.speed = np.clip(self.speed, 0, self.max_speed)  # can't go backwards
 
-        # update acceleration
-        self.accel = (self.throttle * 2 - 1) * self.max_accel
-        self.accel = np.clip(self.accel, -np.inf, self.max_accel)
-
-        # update speed and velocity
-        self.speed += self.accel * delta_time
-        self.speed = np.clip(self.speed, 0, self.max_speed)
+        # physics loop
+        self.angle += self.wheel_angle * self.speed * delta_time / self.turning_radius
+        self.angle = (self.angle - 180) % 360 - 180  # keep between -180 -> 180
         self.velocity = self.speed * np.array(
             [np.sin(np.radians(self.angle)), -np.cos(np.radians(self.angle))]
         )
-
-        # update position
         self.center += self.velocity * delta_time
 
     def set_controls(self, throttle, steer):
         assert 0 <= throttle <= 1
         assert 0 <= steer <= 1
 
-        self.throttle = throttle
+        self.controller_throttle = throttle
+        self.controller_steer = steer
 
-        # TODO: make smoothing time-based
-        self.steer = (
-            steer * (1 - self.steer_smoothing) + self.steer * self.steer_smoothing
-        )
+        # def check_for_collisions(self, environment):
+        #     if not self.can_collide:
+        #         return
 
-    def check_for_collisions(self, environment):
-        if not self.can_collide:
-            return
+        #     for obj in environment:
+        #         if not obj.can_collide or obj == self:
+        #             continue
 
-        for obj in environment:
-            if not obj.can_collide or obj == self:
-                continue
+        #         distance = (
+        #             np.linalg.norm(np.array(self.center) - np.array(obj.center))
+        #             - np.mean(obj.size) / 2
+        #             - np.mean(self.size) / 2
+        #         )
 
-            distance = (
-                np.linalg.norm(np.array(self.center) - np.array(obj.center))
-                - np.mean(obj.size) / 2
-                - np.mean(self.size) / 2
-            )
+        #         if distance < 0:
+        #             return True
 
-            if distance < 0:
-                return True
-
-        return False
+        #     return False
 
         # def get_state(self, display):
         #     view = get_picar_view(display, view_size=40)

@@ -1,73 +1,93 @@
 import pygame
 from utils import scale_coords
+from objects import SimulatorObject, obstacles
+import cv2
+import numpy as np
 
 
 class PicarSim:
     def __init__(
         self,
-        controller,
         picar,
         track,
-        obstacles=[],
-        env_size=(200, 200),
-        update_rate=60,
+        env_size=(150, 150),
+        update_interval=0.01,
+        graphics=True,
         speed_multiplier=1.0,
+        graphics_perspective=None,
     ):
-        self.controller = controller
-        self.picar = picar
-        self.track = track
-        self.obstacles = obstacles
-        self.size = env_size
-        self.update_rate = update_rate
-        self.speed_multiplier = speed_multiplier
+        self.picar = picar  # keep a pointer to picar for easy access
+        self.env = [picar]
+        self.env_size = env_size
+        self.update_interval = update_interval
+        self.graphics = graphics
+        self.graphics_perspective = graphics_perspective
+        self.graphics_speed_multiplier = speed_multiplier
 
-        self.perspective = self.picar
+        self.add_track_to_env(track)
 
-        pygame.init()
-        self.display = pygame.display.set_mode(scale_coords(env_size))
-        self.clock = pygame.time.Clock()
+        if graphics:
+            self.framerate = 1 / update_interval * speed_multiplier
+            pygame.init()
+            self.display = pygame.display.set_mode(scale_coords(env_size))
+            self.clock = pygame.time.Clock()
 
-    def add_obstacle(self, obstacle):
-        self.obstacles.append(obstacle)
+    def add_track_to_env(self, track, res=1):
+        # iterate over track image and add objects where there are pixels
+        track_objects = []
 
-    def render(self):
+        # resize so 1px = 1cm (or specified)
+        track_image = cv2.imread(track.image_path, cv2.IMREAD_GRAYSCALE)
+        track_image = cv2.resize(
+            track_image,
+            track.size // res,
+            interpolation=cv2.INTER_AREA,
+        )
+
+        for y in range(track_image.shape[0]):
+            for x in range(track_image.shape[1]):
+                if track_image[y, x] < 200:
+                    # offset positions to match track object
+                    center = np.array([x, y]) * res
+                    center -= track.size // 2
+                    track_objects.append(obstacles.TrackMaterial(center))
+                    print(f"Adding object at {x}, {y}")
+
+        self.add_objects(track_objects)
+
+        print(f"Added {len(track_objects)} track objects")
+
+    def add_objects(self, new_objects):
+        self.env.extend(new_objects)
+
+    def set_perspective(self, perspective: SimulatorObject):
+        self.perspective = perspective
+
+    def update_env(self, dt):
+        for obj in self.env:
+            obj.update(dt, self.env)
+
+    def render_env(self):
+        # clear display
         self.display.fill((255, 255, 255))
-        for obj in [self.track, self.picar, *self.obstacles]:
+
+        for obj in self.env:
             obj.render(self.display, self.perspective)
+
+        # refresh display with new render
         pygame.display.update()
-        self.clock.tick(self.update_rate * self.speed_multiplier)
 
     def loop(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+        while True:
+            self.update_env(self.update_interval * self.graphics_speed_multiplier)
 
-        dt = 1 / self.update_rate
+            if self.graphics:
+                # check for window close
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
 
-        throttle, steer = self.controller.get_controls(self.picar)
-        self.picar.set_controls(throttle, steer)
-        self.picar.update(dt)
+                self.render_env()
 
-    # def get_picar_view(display, view_size=(40, 40)):
-    #     view_size = scale_coords(view_size)
-    #     y_offset = scale_coords(10)
-
-    #     view_rect = (
-    #         display.get_width() // 2 - view_size[1] // 2,
-    #         display.get_height() // 2 - y_offset - view_size[0],
-    #         *view_size,
-    #     )
-
-    #     # capture rect and convert to cv2 image
-    #     view_cap = display.subsurface(view_rect).copy()
-    #     view_cap = pygame.surfarray.array3d(view_cap)
-    #     view_cap = np.rot90(view_cap)
-    #     view_cap = cv2.flip(view_cap, 0)
-    #     view_cap = cv2.cvtColor(view_cap, cv2.COLOR_RGB2BGR)
-
-    #     # show view
-    #     cv2.imshow("view", view_cap)
-    #     # pygame.draw.rect(display, (255, 0, 255), view_rect, 2)
-
-    #     return view_cap
+                self.clock.tick(self.framerate)

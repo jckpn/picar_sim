@@ -1,9 +1,9 @@
-from objects.base_object import BaseObject
+from objects.base import SimulatorObject
 
 
-class Track(BaseObject):
+class Track(SimulatorObject):
     def __init__(
-        self, center=(0, 0), size=(300, 150), direction=0, image_path=None
+        self, center=(0, 0), size=(250, 125), direction=0, image_path=None
     ):
         super().__init__(center, size, direction, image_path)
 

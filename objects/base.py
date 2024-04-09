@@ -3,20 +3,32 @@ import numpy as np
 from utils import scale_coords
 
 
-class BaseObject:  # TODO: inherit pygame sprite class?
+class SimulatorObject:  # TODO: inherit pygame sprite class?
     def __init__(self, center, size, angle, image_path, can_collide=False):
         self.center = np.array(center, dtype=float)
-        self.size = np.array(size, dtype=float)
+        self.size = np.array(size, dtype=int)
         self.angle = angle
-        self.image = pygame.transform.smoothscale(
-            pygame.image.load(image_path), scale_coords(size)
-        )
         self.can_collide = can_collide
+        self.image_path = image_path
+
+        if image_path:
+            self.image = pygame.transform.smoothscale(
+                pygame.image.load(image_path), scale_coords(size)
+            )
+
+    def update(self, dt, env):
+        pass
 
     def render(self, display, perspective):
-        angle = self.angle - perspective.angle
+        angle = self.angle - perspective.angle if perspective else self.angle
 
-        image = pygame.transform.rotozoom(self.image, -angle, 1)
+        # if no image, draw a rectangle
+        if self.image_path:
+            image = pygame.transform.rotozoom(self.image, -angle, 1)
+        else:
+            image = pygame.Surface(size=scale_coords(self.size))  # type: ignore
+            image.fill((0, 0, 0))
+            image = pygame.transform.rotate(image, angle)
 
         # proper implementation should work for any object, but I've spent too long trying
         # so here's a janky soliution that works for picar or tracks only

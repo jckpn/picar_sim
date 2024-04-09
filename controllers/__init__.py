@@ -1,8 +1,8 @@
 # flake8: noqa
 
-from controllers.keyboard_controller import KeyboardController
-from controllers.lane_controller import LaneController
-# from controllers.cnn_controller import CNNController
-from controllers.target_controller import TargetController
-from controllers.neuro_target_controller import NeuroTargetController
-from controllers.mouse_controller import MouseController
+from .base import PicarController
+from .keyboard_controller import KeyboardController
+# from .lane_controller import LaneController
+# from .target_controller import TargetController
+# from .neuro_target_controller import NeuroTargetController
+# from .mouse_controller import MouseController
