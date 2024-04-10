@@ -1,13 +1,12 @@
 from objects.base import SimulatorObject
 import numpy as np
-from controllers import KeyboardController
-from grid_state import GridState
+from controllers import PicarController, KeyboardController
 
 
 class Picar(SimulatorObject):
     def __init__(
         self,
-        controller=KeyboardController(),
+        controller: PicarController = KeyboardController(),
         center=(0, 0),
         size=(13, 26),
         angle=0,
@@ -35,40 +34,36 @@ class Picar(SimulatorObject):
         self.max_wheel_angle = 40  # degrees
         self.wheel_actuation_speed = 160.0  # 40 / time it takes to turn wheel 0 -> 40
 
-    def update(self, delta_time, objects):
+    def update(self, dt, env):
         # get controls from controller
-        throttle, steer = self.controller.get_controls()
+        throttle, steer = self.controller.get_controls(self, env)
         self.set_controls(throttle, steer)
-
-        state = GridState()
-        state.fetch_state(self, objects)
-        state.print()
 
         # controls -> physics
         new_wheel_angle = (self.controller_steer * 2 - 1) * self.max_wheel_angle
         if new_wheel_angle > self.wheel_angle:
-            self.wheel_angle += self.wheel_actuation_speed * delta_time
+            self.wheel_angle += self.wheel_actuation_speed * dt
             self.wheel_angle = min(self.wheel_angle, new_wheel_angle)  # don't overshoot
         elif new_wheel_angle < self.wheel_angle:
-            self.wheel_angle -= self.wheel_actuation_speed * delta_time
+            self.wheel_angle -= self.wheel_actuation_speed * dt
             self.wheel_angle = max(self.wheel_angle, new_wheel_angle)  # don't overshoot
         self.wheel_angle = np.clip(
             self.wheel_angle, -self.max_wheel_angle, self.max_wheel_angle
         )
         new_speed = self.controller_throttle * self.max_speed
         if new_speed > self.speed:
-            self.speed += self.accel * delta_time
+            self.speed += self.accel * dt
         elif new_speed < self.speed:
-            self.speed -= self.breaking_accel * delta_time
+            self.speed -= self.breaking_accel * dt
         self.speed = np.clip(self.speed, 0, self.max_speed)  # can't go backwards
 
         # physics loop
-        self.angle += self.wheel_angle * self.speed * delta_time / self.turning_radius
+        self.angle += self.wheel_angle * self.speed * dt / self.turning_radius
         self.angle = (self.angle - 180) % 360 - 180  # keep between -180 -> 180
         self.velocity = self.speed * np.array(
             [np.sin(np.radians(self.angle)), -np.cos(np.radians(self.angle))]
         )
-        self.center += self.velocity * delta_time
+        self.center += self.velocity * dt
 
     def set_controls(self, throttle, steer):
         assert 0 <= throttle <= 1

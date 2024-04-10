@@ -7,9 +7,9 @@ import objects
 # 1. Keeping in lane driving along the straight section of the T-junction track, as
 # shown in Fig. 1.
 class Scene1(PicarSim):
-    def __init__(self, **kwargs):
+    def __init__(self, controller, **kwargs):
         super().__init__(
-            picar=objects.Picar(center=(0, -10), angle=90),
+            picar=objects.Picar(controller),
             track=objects.tracks.Junction(),
             **kwargs,
         )
@@ -20,4 +20,75 @@ class Scene1(PicarSim):
 class Scene2(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.random_obstacles((-100, -50, 170, 30), (-100, 20, 170, 30))
+
+
+# 3. As (1), but stopping if a pedestrian is in the road, as shown in Fig. 3.
+class Scene3(Scene1):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add_objects([objects.obstacles.Wood(center=(0, 0))])
+
+
+# 4. Driving around the oval track in both directions, as shown in Fig. 4.
+class Scene4(PicarSim):
+    def __init__(self, controller, **kwargs):
+        super().__init__(
+            picar=objects.Picar(controller),
+            track=objects.tracks.Oval(),
+            **kwargs,
+        )
+
+
+# 5. As (4), but driving as normal if pedestrians or other objects are on the side of
+# (but not in) the road, as shown in Fig. 5.
+class Scene5(Scene4):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add_objects([objects.obstacles.Wood(center=(-30, -10))])
+
+
+# 6. As (4), but stopping if a pedestrian is in the road, as shown in Fig. 6.
+class Scene6(Scene4):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
         self.add_objects([objects.obstacles.Wood(center=(-50, -10))])
+
+
+# 7. Driving around the figure-of-eight, continuing straight at the intersection, as
+# shown in Fig. 7.
+class Scene7(PicarSim):
+    def __init__(self, controller, **kwargs):
+        super().__init__(
+            picar=objects.Picar(controller),
+            track=objects.tracks.Figure8(),
+            **kwargs,
+        )
+
+
+# 8. Stopping due to an object in the center of the intersection, as shown in Fig. 8.
+class Scene8(Scene7):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add_objects([objects.obstacles.Wood(center=(0, 0))])
+
+
+# 9. Stopping due to a red traffic light at the intersection, then continuing when it
+# changes to green, as shown in Fig. 9.
+
+
+# 10. Performing a left turn at the T-junction, in response to a traffic sign, as shown
+# in Fig. 10. We will place 2 left turn signs at positions indicated in the figure.
+
+# 11. Performing a right turn at the T-junction, in response to a traffic sign, as shown
+# in Fig. 11. We will place 2 right turn signs at positions indicated in the figure.
+# Note this ‘unprotected’ right (left in the USA) has been a major difficulty in
+# the Tesla autonomous beta testing program.
+
+# 12. Driving round the oval track, as (4), but at a speed of 50. Can your car respond
+# fast enough at this speed?

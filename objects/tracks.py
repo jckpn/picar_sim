@@ -1,11 +1,10 @@
+from tkinter import image_names
 from objects.base import SimulatorObject
 
 
 class Track(SimulatorObject):
-    def __init__(
-        self, center=(0, 0), size=(250, 125), direction=0, image_path=None
-    ):
-        super().__init__(center, size, direction, image_path)
+    def __init__(self, center=(0, 0), size=(220, 110), image_path=None):
+        super().__init__(center, size, angle=0, image_path=image_path)
 
 
 class Oval(Track):
