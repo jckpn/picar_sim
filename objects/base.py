@@ -32,11 +32,12 @@ class SimulatorObject:  # TODO: inherit pygame sprite class?
         pass
 
     def render(self, display, perspective):
+        # the proper implementation should work for any object, but I've spent too long
+        # trying so here's a janky solution that just follows picar or does nothing
+        
         angle = self.angle - perspective.angle if perspective else self.angle
         image = pygame.transform.rotate(self.image, -angle)
-
-        # proper implementation should work for any object, but I've spent too long trying
-        # so here's a janky soliution that works for picar or tracks only
+        
         if perspective.__class__.__name__ == "Picar":
             offset = scale_coords(
                 (

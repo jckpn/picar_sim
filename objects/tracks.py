@@ -1,4 +1,3 @@
-from tkinter import image_names
 from objects.base import SimulatorObject
 
 

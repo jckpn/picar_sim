@@ -240,7 +240,7 @@ class NeuroTargetController:
         )  # create new sim with controller
         # show where targets are
         for t in test_targets:
-            sim.add_obstacle(obstacles.Wood(center=t, size=(10, 10)))
+            sim.add_obstacle(obstacles.Obstacle(center=t, size=(10, 10)))
 
         self.targets = test_targets.copy()
 

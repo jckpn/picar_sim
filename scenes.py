@@ -14,6 +14,13 @@ class Scene1(PicarSim):
             **kwargs,
         )
 
+        self.add_objects(
+            [
+                objects.TrafficLight(center=(0, 0), state="red"),
+                objects.TrafficLight(center=(0, 20), state="green"),
+            ]
+        )
+
 
 # 2. As (1), but driving as normal if pedestrians or other objects are on the side of
 # (but not in) the road, as shown in Fig. 2.
@@ -21,7 +28,7 @@ class Scene2(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.random_obstacles((-100, -50, 170, 30), (-100, 20, 170, 30))
+        self.random_obstacle_region((-100, -50, 170, 30), (-100, 20, 170, 30))
 
 
 # 3. As (1), but stopping if a pedestrian is in the road, as shown in Fig. 3.
@@ -29,7 +36,7 @@ class Scene3(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.add_objects([objects.obstacles.Wood(center=(0, 0))])
+        self.random_obstacle_region((-100, -50, 200, 100))
 
 
 # 4. Driving around the oval track in both directions, as shown in Fig. 4.
@@ -48,7 +55,13 @@ class Scene5(Scene4):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.add_objects([objects.obstacles.Wood(center=(-30, -10))])
+        self.random_obstacle_region(
+            (-68, -21, 136, 42),  # inside oval
+            (-150, -80, 37, 160),  # left side (outside)
+            (-150, -100, 300, 40),  # upper side
+            (112, -80, 37, 160),  # right side
+            (-150, 60, 300, 40),  # lower side
+        )
 
 
 # 6. As (4), but stopping if a pedestrian is in the road, as shown in Fig. 6.
@@ -56,7 +69,7 @@ class Scene6(Scene4):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.add_objects([objects.obstacles.Wood(center=(-50, -10))])
+        self.random_obstacle_region((-100, -50, 200, 100))
 
 
 # 7. Driving around the figure-of-eight, continuing straight at the intersection, as
@@ -75,7 +88,7 @@ class Scene8(Scene7):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.add_objects([objects.obstacles.Wood(center=(0, 0))])
+        self.random_obstacle_region((-20, -20, 40, 40))
 
 
 # 9. Stopping due to a red traffic light at the intersection, then continuing when it
