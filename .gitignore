@@ -161,3 +161,5 @@ cython_debug/
 
 # too big for github
 state_data.csv
+
+label_*/
