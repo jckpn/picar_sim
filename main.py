@@ -21,7 +21,7 @@ def main():
     grid_params = {
         "cell_size": cell_size,
         "range": grid_size * cell_size,
-        "camera_offset": 5,  # MEASURED
+        "camera_offset": 15,  # 5cm from front, 15cm from wheel = sim 'center'
     }
 
     sim = scenes.Scene7(
