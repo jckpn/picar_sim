@@ -16,27 +16,24 @@ FOLLOW_PICAR = False
 
 
 def main():
-    grid_size = 25
-    cell_size = 3.5
     grid_params = {
-        "cell_size": cell_size,
-        "range": grid_size * cell_size,
+        "cell_size": 2,
+        "range": 60,
         "camera_offset": 15,  # 5cm from front, 15cm from wheel = sim 'center'
     }
 
-    sim = scenes.Scene7(
-        controller=controllers.MoeController(**grid_params, smoothing=0.5),
-        # controllers.GridDetController(**grid_params),
-        # controllers.GridCaptureController(**grid_params),
-        controller_interval=0.1 if not TRAINING else 0.01,
+    sim = scenes.Scene4(
+        controller=controllers.MoeController(**grid_params, smoothing=0.8)
+        if not TRAINING
+        else controllers.GridCaptureController(**grid_params),
         speed_multiplier=10 if not TRAINING else 1,
         env_size=(150, 150) if FOLLOW_PICAR else (350, 200),
     )
 
     # if TRAINING:
     #     sim.random_picar_position()
-        # sim.set_perspective(sim.picar)  # makes manual driving easier
-    
+    # sim.set_perspective(sim.picar)  # makes manual driving easier
+
     if FOLLOW_PICAR:
         sim.set_perspective(sim.picar)
 

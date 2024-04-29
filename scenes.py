@@ -11,7 +11,7 @@ class Scene1(PicarSim):
     def __init__(self, controller, controller_interval=0.1, **kwargs):
         super().__init__(
             picar=objects.Picar(
-                controller, controller_interval, center=(-100, -10), angle=90
+                controller, controller_interval, center=(-150, -10), angle=90
             ),
             track=objects.tracks.Junction(),
             **kwargs,
@@ -40,12 +40,12 @@ class Scene4(PicarSim):
     def __init__(self, controller, controller_interval=0.1, **kwargs):
         start_pos = (
             {
-                "center": (-100, 0),
+                "center": (-150, 0),
                 "angle": 0,
             }
             if np.random.rand() < 0.5
             else {
-                "center": (-88, 0),
+                "center": (-120, 0),
                 "angle": 180,
             }
         )
@@ -84,7 +84,7 @@ class Scene6(Scene4):
 class Scene7(PicarSim):
     def __init__(self, controller, controller_interval=0.1, **kwargs):
         super().__init__(
-            picar=objects.Picar(controller, controller_interval, center=(-100, 0)),
+            picar=objects.Picar(controller, controller_interval, center=(-160, 0)),
             track=objects.tracks.Figure8(),
             **kwargs,
         )

@@ -28,15 +28,15 @@ class Picar(SimulatorObject):
         self.wheel_angle = 0.0
 
         # constants -- these are total guesses atm
-        self.turning_radius = 12.0  # cm
-        self.max_speed = 30.0  # cm/s
-        self.accel = 25.0  # cm/s^2
-        self.breaking_accel = 50.0  # breaking has faster accel
-        self.max_wheel_angle = 50.0  # degrees
-        self.wheel_actuation_speed = 999.0  # degrees/s, might not be needed
+        self.max_speed = 35.0  # from docs
+        self.max_wheel_angle = 40.0  # from docs
+        self.turning_radius = 50.0  # measured
+        self.accel = 30.0  # not measured in person yet
+        self.breaking_accel = 60.0  # breaking is faster than accel
+        self.magic_wheel_multiplier = 3  # don't ask
 
     def update(self, dt, env):
-        # get controls from controller
+        # get controls
         self.dt_since_controller += dt
         if self.dt_since_controller >= self.controller_interval:
             throttle, steer = self.controller.get_controls(self, env)
@@ -44,16 +44,7 @@ class Picar(SimulatorObject):
             self.dt_since_controller = 0
 
         # controls -> physics
-        new_wheel_angle = (self.controller_steer * 2 - 1) * self.max_wheel_angle
-        if new_wheel_angle > self.wheel_angle:
-            self.wheel_angle += self.wheel_actuation_speed * dt
-            self.wheel_angle = min(self.wheel_angle, new_wheel_angle)  # don't overshoot
-        elif new_wheel_angle < self.wheel_angle:
-            self.wheel_angle -= self.wheel_actuation_speed * dt
-            self.wheel_angle = max(self.wheel_angle, new_wheel_angle)  # don't overshoot
-        self.wheel_angle = np.clip(
-            self.wheel_angle, -self.max_wheel_angle, self.max_wheel_angle
-        )
+        self.wheel_angle = (self.controller_steer * 2 - 1) * self.max_wheel_angle
         new_speed = self.controller_throttle * self.max_speed
         if new_speed > self.speed:
             self.speed += self.accel * dt
@@ -62,7 +53,13 @@ class Picar(SimulatorObject):
         self.speed = np.clip(self.speed, 0, self.max_speed)  # can't go backwards
 
         # physics loop
-        self.angle += self.wheel_angle * self.speed * dt / self.turning_radius
+        self.angle += (
+            self.wheel_angle
+            * self.speed
+            * self.magic_wheel_multiplier
+            / self.turning_radius
+            * dt
+        )
         self.angle = (self.angle - 180) % 360 - 180  # keep between -180 -> 180
         self.velocity = self.speed * np.array(
             [np.sin(np.radians(self.angle)), -np.cos(np.radians(self.angle))]
