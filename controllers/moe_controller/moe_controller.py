@@ -11,7 +11,7 @@ class MoeController(PicarController):
 
         # initialise models
         self.experts = {
-            "follow": ExpertController("combined_junction_straight.keras"),
+            "follow": ExpertController("cam-new.keras"),
             # "left_turns": ExpertController("left_turns.keras"),
             # "right_turns": ExpertController("right_turns.keras"),
             # "wait_at_junction": ExpertController("follow.keras"),  # TODO
