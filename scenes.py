@@ -1,5 +1,6 @@
 from picar_sim import PicarSim
 import objects
+import numpy as np
 
 # TODO: randomise obstacles. add random obstacles to all scenes out of way of track
 
@@ -7,18 +8,13 @@ import objects
 # 1. Keeping in lane driving along the straight section of the T-junction track, as
 # shown in Fig. 1.
 class Scene1(PicarSim):
-    def __init__(self, controller, **kwargs):
+    def __init__(self, controller, controller_interval=0.1, **kwargs):
         super().__init__(
-            picar=objects.Picar(controller),
+            picar=objects.Picar(
+                controller, controller_interval, center=(-100, -10), angle=90
+            ),
             track=objects.tracks.Junction(),
             **kwargs,
-        )
-
-        self.add_objects(
-            [
-                objects.TrafficLight(center=(0, 0), state="red"),
-                objects.TrafficLight(center=(0, 20), state="green"),
-            ]
         )
 
 
@@ -28,7 +24,7 @@ class Scene2(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.random_obstacle_region((-100, -50, 170, 30), (-100, 20, 170, 30))
+        self.obstacle_regions = [(-100, -50, 170, 30), (-100, 20, 170, 30)]
 
 
 # 3. As (1), but stopping if a pedestrian is in the road, as shown in Fig. 3.
@@ -36,14 +32,25 @@ class Scene3(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.random_obstacle_region((-100, -50, 200, 100))
+        self.obstacle_regions = [(-100, -50, 200, 100)]
 
 
 # 4. Driving around the oval track in both directions, as shown in Fig. 4.
 class Scene4(PicarSim):
-    def __init__(self, controller, **kwargs):
+    def __init__(self, controller, controller_interval=0.1, **kwargs):
+        start_pos = (
+            {
+                "center": (-100, 0),
+                "angle": 0,
+            }
+            if np.random.rand() < 0.5
+            else {
+                "center": (-88, 0),
+                "angle": 180,
+            }
+        )
         super().__init__(
-            picar=objects.Picar(controller),
+            picar=objects.Picar(controller, controller_interval, **start_pos),
             track=objects.tracks.Oval(),
             **kwargs,
         )
@@ -55,13 +62,13 @@ class Scene5(Scene4):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.random_obstacle_region(
+        self.obstacle_regions = [
             (-68, -21, 136, 42),  # inside oval
-            (-150, -80, 37, 160),  # left side (outside)
+            (-145, -80, 37, 160),  # left side (outside)
             (-150, -100, 300, 40),  # upper side
             (112, -80, 37, 160),  # right side
             (-150, 60, 300, 40),  # lower side
-        )
+        ]
 
 
 # 6. As (4), but stopping if a pedestrian is in the road, as shown in Fig. 6.
@@ -69,15 +76,15 @@ class Scene6(Scene4):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.random_obstacle_region((-100, -50, 200, 100))
+        self.obstacle_regions = [(-100, -50, 200, 100)]
 
 
 # 7. Driving around the figure-of-eight, continuing straight at the intersection, as
 # shown in Fig. 7.
 class Scene7(PicarSim):
-    def __init__(self, controller, **kwargs):
+    def __init__(self, controller, controller_interval=0.1, **kwargs):
         super().__init__(
-            picar=objects.Picar(controller),
+            picar=objects.Picar(controller, controller_interval, center=(-100, 0)),
             track=objects.tracks.Figure8(),
             **kwargs,
         )
@@ -88,7 +95,7 @@ class Scene8(Scene7):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.random_obstacle_region((-20, -20, 40, 40))
+        self.obstacle_regions = [(-20, -20, 40, 40)]
 
 
 # 9. Stopping due to a red traffic light at the intersection, then continuing when it

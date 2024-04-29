@@ -1,33 +1,46 @@
+import controllers.grid_state
 import scenes
 import controllers
 
+# TODO:
+# gating model which decides to:
+# 1. stop/wait (immediately, or at intersection line if appropriate), or
+# 2. follow track (always straight at junctions), or
+# 3. always turn right at junctions, or
+# 4. always turn left at junctions
+# where these are each small, separate models to be trained
 
-# TODO: current problem is, the model learns too many different things and averages them
-# out e.g. at a junction the average of the training data is to go straight need a way
-# to encourage the model to take one or the other
-# 
-# I'm pretty sure using recurrent connections would solve it so it can see past
-# decisions or a transformer model
-#
-# I'm also thinking:
-# - several models for steering 
-# - with an overlooking model (could be manual, even a bunch of if statements might
-#   work) which controls throttle and decides which steering model to use e.g. if it
-#   sees an obstacle, no model / throttle 0, if it sees a junction with a left turn, use
-#   left turn model
-#
-# this would also potentially solve the issue of averaging out decisions
+
+TRAINING = False
+FOLLOW_PICAR = False
 
 
 def main():
-    sim = scenes.Scene1(
-        # controller=controllers.GridNeuralController(),
-        controller=controllers.MouseController(),  # to capture training data
-        speed_multiplier=1.0,
-    )
-    sim.random_picar_position()
+    grid_size = 25
+    cell_size = 3.5
+    grid_params = {
+        "cell_size": cell_size,
+        "range": grid_size * cell_size,
+        "camera_offset": 5,
+    }
 
-    sim.set_perspective(sim.picar)  # makes manual driving easier
+    sim = scenes.Scene7(
+        controller=controllers.MoeController(**grid_params, smoothing=0.5),
+        # controllers.GridDetController(**grid_params),
+        # controllers.GridCaptureController(**grid_params),
+        controller_interval=0.1 if not TRAINING else 0.01,
+        speed_multiplier=10 if not TRAINING else 1,
+        env_size=(150, 150) if FOLLOW_PICAR else (350, 200),
+    )
+
+    # if TRAINING:
+    #     sim.random_picar_position()
+        # sim.set_perspective(sim.picar)  # makes manual driving easier
+    
+    if FOLLOW_PICAR:
+        sim.set_perspective(sim.picar)
+
+    print(sim.picar.controller_interval)
     sim.loop()
 
 

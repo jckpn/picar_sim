@@ -10,12 +10,13 @@ class PicarSim:
         self,
         picar,
         track,
-        env_size=(200, 200),
+        env_size,  # viewable window size
         update_interval=0.01,
         graphics=True,
-        speed_multiplier=1.0,
+        speed_multiplier=1,
         graphics_perspective=None,
         perspective=None,
+        obstacle_regions=[],
     ):
         self.picar = picar  # keep a pointer to picar for easy access
         self.env = [track, picar]
@@ -25,8 +26,9 @@ class PicarSim:
         self.graphics_perspective = graphics_perspective
         self.speed_multiplier = speed_multiplier
         self.perspective = perspective
+        self.obstacle_regions = []
 
-        self.add_track_to_env(track)  # add as obstacles to get state
+        self.cvt_track_to_obstacles(track)  # add as obstacles to get state
 
         if graphics:
             self.framerate = 1 / update_interval * speed_multiplier
@@ -34,21 +36,19 @@ class PicarSim:
             self.display = pygame.display.set_mode(scaler.scale_coords(env_size))
             self.clock = pygame.time.Clock()
 
-    def add_track_to_env(self, track, res=1):
+    def cvt_track_to_obstacles(self, track, res=1, threshold_color=245):
         # iterate over track image and add objects where there are pixels
         track_objects = []
 
-        # resize so 1px = 1cm (or specified)
-        track_image = cv2.imread(track.image_path, cv2.IMREAD_GRAYSCALE)
-        track_image = cv2.resize(
-            track_image,
+        # turn track to grid, then iterate over grid to add obstacle objects
+        track_grid = cv2.resize(
+            cv2.imread(track.image_path, cv2.IMREAD_GRAYSCALE),
             track.size // res,
-            interpolation=cv2.INTER_AREA,
         )
 
-        for y in range(track_image.shape[0]):
-            for x in range(track_image.shape[1]):
-                if track_image[y, x] < 200:
+        for y in range(track_grid.shape[0]):
+            for x in range(track_grid.shape[1]):
+                if track_grid[y, x] < threshold_color:
                     # offset positions to match track object
                     center = np.array([x, y]) * res
                     center -= track.size // 2
@@ -57,19 +57,24 @@ class PicarSim:
         self.add_objects(track_objects)
         print(f"Converted track image to {len(track_objects)} obstacles")
 
+    def reset_objects(self):
+        for obj in self.env:
+            if obj.__class__.__name__ == "Obstacle":
+                self.env.remove(obj)
+
     def add_objects(self, new_objects):
         self.env.extend(new_objects)
 
     def random_picar_position(self):
         self.picar.center = np.array(
-            [np.random.rand() * 300 - 150, np.random.rand() * 200 - 100]
+            [np.random.rand() * 200 - 100, np.random.rand() * 100 - 50]
         )
         self.picar.angle = np.random.randint(0, 360)
 
-    def random_obstacle_region(self, *rects):
-        num_obstacles = np.random.randint(1, 8)  # create variance between simulations
+    def fill_obstacle_regions(self):
+        num_obstacles = np.random.randint(1, 4)  # some variance between simulations
 
-        for rect in rects:
+        for rect in self.obstacle_regions:
             rx, ry, rw, rh = rect
             for _ in range(num_obstacles):
                 x = np.random.randint(rx, rx + rw)
@@ -88,11 +93,9 @@ class PicarSim:
         self.display.fill((255, 255, 255))
 
         for obj in self.env:
-            if obj == self.picar or obj.__class__.__name__ == "TrackMaterial":
+            if obj == self.picar:  # render picar at end to make sure it's on top
                 continue
             obj.render(self.display, self.perspective)
-
-        # render picar at end to make sure it's on top
         self.picar.render(self.display, self.perspective)
 
         # refresh display with new render
@@ -100,7 +103,8 @@ class PicarSim:
 
     def loop(self):
         while True:
-            self.update_env(self.update_interval * self.speed_multiplier)
+            for _ in range(self.speed_multiplier):
+                self.update_env(self.update_interval)
 
             if self.graphics:
                 # check for window close
@@ -109,6 +113,12 @@ class PicarSim:
                         pygame.quit()
                         quit()
 
-                self.render_env()
+                # randomly shuffle obstacles if the scene has them
+                if np.random.rand() < self.update_interval * 0.2:  # every ~5s
+                    self.reset_objects()
 
+                    if 0.5:
+                        self.fill_obstacle_regions()
+
+                self.render_env()
                 self.clock.tick(self.framerate)

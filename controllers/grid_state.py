@@ -19,12 +19,19 @@ import numpy as np
 
 
 class GridState:  # TODO: figure out what grid size corresponds to the view we get
-    def __init__(self, range=100, cell_size=3):
-        self.cell_size = cell_size  # cm
-        self.range = range  # cm
-        self.grid_size = range // cell_size  # cells
+    def __init__(self, range=None, cell_size=None, grid_size=None, camera_offset=12.0):
+        assert cell_size and (range or grid_size)
+        assert not range or range % cell_size == 0, "range must be divisible by cell_size"
 
-        self.encoding = {  # capture state as integers
+        self.cell_size = cell_size  # cm
+        self.range = range if range else grid_size * cell_size
+        self.grid_size = grid_size if grid_size else int(range / cell_size)
+
+        # apply offset since picar doesn't see from its actual center
+        self.camera_offset = camera_offset
+
+        # capture state as integers, probs most efficient way to store for now
+        self.cell_obj_to_int = {
             "Empty": 0,
             "GreenTrafficLight": 0,  # ignore as no effect on desired behaviour
             "TrackMaterial": 1,
@@ -34,7 +41,7 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
             "TurnLeftSign": 5,
         }
 
-        self.display_encoding = [  # -> symbol
+        self.cell_int_to_str = [  # convert state to symbols, e.g. for pattern matching
             " ",
             ".",
             "O",
@@ -53,7 +60,15 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
     def get_state(self):
         return self.state.copy()
 
-    def capture_state(self, picar, env):
+    def get_state_as_str(self):
+        state_str = ""
+        for y, row in enumerate(self.state):
+            for x, cell in enumerate(row):
+                state_str += self.cell_int_to_str[cell]
+            state_str += "\n"
+        return state_str
+
+    def capture_state_from_env(self, picar, env, print=True):
         # encode the current state of the picar and environment as a grid the picar is
         # always at the bottom-center of the grid (could experiment with picar at center
         # and calculating where objects behind it are)
@@ -82,16 +97,47 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
             obj_pos = np.array(obj_pos // self.cell_size, dtype=int)
 
             # offset so picar is at bottom center
-            obj_pos += np.array([self.grid_size // 2, self.grid_size])
+            obj_pos += np.array([
+                    self.grid_size / 2,
+                    self.grid_size + self.camera_offset / self.cell_size,
+                ], dtype=int)  # fmt: off
 
             # ignore if out of range
             if obj_pos.max() > self.grid_size or obj_pos.min() < 0:
                 continue
 
+            if obj_name == "TrafficLight":
+                if obj.state == "red":
+                    obj_name = "RedTrafficLight"
+                elif obj.state == "green":
+                    obj_name = "GreenTrafficLight"
+
             try:
-                self.state[obj_pos[1], obj_pos[0]] = self.encoding[obj_name]
+                self.state[obj_pos[1], obj_pos[0]] = self.cell_obj_to_int[obj_name]
             except Exception:  # don't want exceptions to stop the loop
                 pass
+
+        self.state = self.simulate_view_obstructions(self.state)
+
+        if print:
+            self.print()
+
+    def simulate_view_obstructions(self, state):
+        for y, row in enumerate(state):
+            for x, cell in enumerate(row):
+                if cell == self.cell_obj_to_int["Obstacle"]:
+                    # make all cells behind obstacle empty
+                    state[: y - 1, x] = self.cell_obj_to_int["Empty"]
+        return state
+
+    def get_collision_cells(self, width, dist, offset_x=0):
+        # work out the cells in collision path of picar
+        # maybe: this should change size/shape based on speed and angle?
+        grid_width = width // self.cell_size
+        grid_height = dist // self.cell_size
+        x = self.grid_size // 2 - grid_width // 2
+        offset_x = offset_x // self.cell_size
+        return self.state[-grid_height:, offset_x + x : offset_x - x]
 
     def estimate_state(self, picar, dt):
         # estimate the picar's position based on its speed and angle in case object
@@ -104,10 +150,13 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
         # ...
         pass
 
-    def print(self):
-        print("\n" * 10)
+    def to_cm(self, grid_size):
+        return grid_size * self.cell_size
 
-        for y, row in enumerate(self.state):
-            for x, cell in enumerate(row):
-                print(self.display_encoding[cell], end=" ")
+    def print(self):
+        state_str = self.get_state_as_str()
+
+        for row in state_str.split("\n"):
+            for cell in state_str:
+                print(cell, end=" ")
             print()

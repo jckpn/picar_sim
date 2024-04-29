@@ -9,14 +9,14 @@ class KeyboardController(PicarController):
     def get_controls(self, *args, **kwargs):
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
             throttle = 1.0
         else:
             throttle = 0.0
 
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             steer = 0.0
-        elif keys[pygame.K_RIGHT]:
+        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             steer = 1.0
         else:
             steer = 0.5

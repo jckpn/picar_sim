@@ -6,7 +6,5 @@ class Obstacle(SimulatorObject):
         super().__init__(
             center,
             size=size,
-            angle=0,
-            image_path="objects/assets/obstacle.png",
-            can_collide=True,
+            color=(255, 0, 255),
         )

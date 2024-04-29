@@ -7,37 +7,41 @@ class Picar(SimulatorObject):
     def __init__(
         self,
         controller: PicarController = KeyboardController(),
+        controller_interval=0.1,
         center=(0, 0),
-        size=(13, 26),
+        size=(14, 28),
         angle=0,
         image_path="objects/assets/picar.png",
     ):
         super().__init__(center, size, angle, image_path, can_collide=True)
 
         self.controller = controller
+        self.controller_interval = controller_interval
+        self.dt_since_controller = 0
 
         # variables set by controller each frame
         self.controller_throttle = 0.0
         self.controller_steer = 0.5
-        self.throttle = 0.0
-        self.steer = 0.0
 
         # dynamic variables
         self.speed = 0.0
         self.wheel_angle = 0.0
 
         # constants -- these are total guesses atm
-        self.turning_radius = 15.0  # cm
-        self.max_speed = 30.0  # cm/s I think?
+        self.turning_radius = 12.0  # cm
+        self.max_speed = 30.0  # cm/s
         self.accel = 25.0  # cm/s^2
         self.breaking_accel = 50.0  # breaking has faster accel
-        self.max_wheel_angle = 40  # degrees
-        self.wheel_actuation_speed = 160.0  # 40 / time it takes to turn wheel 0 -> 40
+        self.max_wheel_angle = 50.0  # degrees
+        self.wheel_actuation_speed = 999.0  # degrees/s, might not be needed
 
     def update(self, dt, env):
         # get controls from controller
-        throttle, steer = self.controller.get_controls(self, env)
-        self.set_controls(throttle, steer)
+        self.dt_since_controller += dt
+        if self.dt_since_controller >= self.controller_interval:
+            throttle, steer = self.controller.get_controls(self, env)
+            self.set_controls(throttle, steer)
+            self.dt_since_controller = 0
 
         # controls -> physics
         new_wheel_angle = (self.controller_steer * 2 - 1) * self.max_wheel_angle

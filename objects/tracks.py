@@ -2,7 +2,7 @@ from objects.base import SimulatorObject
 
 
 class Track(SimulatorObject):
-    def __init__(self, center=(0, 0), size=(220, 110), image_path=None):
+    def __init__(self, center=(0, 0), size=(300, 150), image_path=None):
         super().__init__(center, size, angle=0, image_path=image_path)
 
 
