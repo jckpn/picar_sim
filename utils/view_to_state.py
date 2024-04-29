@@ -9,22 +9,29 @@ now = time.time()
 
 
 def view_to_state(img, grid_size=25):
-    preview(img)
+    # preview(img)
 
     img = overhead_warp(img)
-    preview(img)
+    # preview(img)
     # preview(img)
 
     # img = enhance_track(img)
     # preview(img)
-    
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = 255 - img
-    img = cv2.dilate(img, np.ones((5, 5)), iterations=1)
+
+    # Convert to HSV
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    # Threshold by HSV: S <= 0.3, V <= 0.5
+    S_THRESHOLD = 0.2
+    V_THRESHOLD = 0.5
+    img = cv2.inRange(img, (0, 0, 0), (255, S_THRESHOLD * 255, V_THRESHOLD * 255))
+    img = cv2.dilate(img, np.ones((5, 5), np.uint8), iterations=1)
     img = cv2.resize(img, (grid_size, grid_size), interpolation=cv2.INTER_NEAREST)
+
     preview(img)
 
     state = img / 255
+    # Plot a histogram of the state
     print(state.shape)
     return state
 
@@ -88,24 +95,32 @@ def enhance_track(img):
     return img
 
 
+def print_state(state):
+    """Print the state as a 25x25 grid of characters. ' ' for < 0.5, '█' for >= 0.5"""
+    for row in state:
+        print("".join(["░" if cell < 0.5 else "█" for cell in row]))
+
+
 if __name__ == "__main__":
     img = cv2.imread(
-        f"/Users/jckpn/dev/picar/data/training_data/training_data/{np.random.randint(1, 10000)}.png"
+        "C:/Users/Dino/Downloads/New folder1/Car1/downloads_images/1709571067912_90_35.png"
     )
     # img = cv2.imread("utils/pic.jpg")
     state = view_to_state(img)
+    print_state(state)
+
     exit()
 
-    df = pd.read_csv("/Users/jckpn/dev/picar/data/training_norm.csv")
+    # df = pd.read_csv("/Users/jckpn/dev/picar/data/training_norm.csv")
 
-    with open("state_data.csv", "a") as f:
-        for entry in df.iterrows():
-            print(entry[0])
-            f.write(f"{entry[1]['speed']},{entry[1]['angle']}")
-            img_path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{int(entry[1]['image_id'])}.png"
-            img = cv2.imread(img_path)
-            state = view_to_state(img)
-            state = state.flatten()
-            for cell in state:
-                f.write(f",{cell:.2f}")
-            f.write("\n")
+    # with open("state_data.csv", "a") as f:
+    #     for entry in df.iterrows():
+    #         print(entry[0])
+    #         f.write(f"{entry[1]['speed']},{entry[1]['angle']}")
+    #         img_path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{int(entry[1]['image_id'])}.png"
+    #         img = cv2.imread(img_path)
+    #         state = view_to_state(img)
+    #         state = state.flatten()
+    #         for cell in state:
+    #             f.write(f",{cell:.2f}")
+    #         f.write("\n")
