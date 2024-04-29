@@ -12,9 +12,9 @@ class MoeController(PicarController):
         # initialise models
         self.experts = {
             "follow": ExpertController("combined_junction_straight.keras"),
-            "left_turns": ExpertController("left_turns.keras"),
-            "right_turns": ExpertController("right_turns.keras"),
-            "wait_at_junction": ExpertController("follow.keras"),  # TODO
+            # "left_turns": ExpertController("left_turns.keras"),
+            # "right_turns": ExpertController("right_turns.keras"),
+            # "wait_at_junction": ExpertController("follow.keras"),  # TODO
         }
         self.current_expert = self.experts[initial_expert]
         self.smoothing = smoothing

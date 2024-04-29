@@ -9,9 +9,10 @@ now = time.time()
 
 
 def view_to_state(img, grid_size=25):
-    # preview(img)
+    preview(img)
 
     img = overhead_warp(img)
+    preview(img)
     # preview(img)
 
     # img = enhance_track(img)
@@ -21,7 +22,7 @@ def view_to_state(img, grid_size=25):
     img = 255 - img
     img = cv2.dilate(img, np.ones((5, 5)), iterations=1)
     img = cv2.resize(img, (grid_size, grid_size), interpolation=cv2.INTER_NEAREST)
-    # preview(img)
+    preview(img)
 
     state = img / 255
     print(state.shape)
@@ -53,9 +54,9 @@ def overhead_warp(img):
     # top_width = 0.4 * w
     # bot_width = 1.7 * w
 
-    top = 0.4 * h
+    top = 0.35 * h
     bot = 1.0 * h
-    top_width = 0.6 * w
+    top_width = 0.5 * w
     bot_width = 1.8 * w
 
     mat = cv2.getPerspectiveTransform(
@@ -88,11 +89,12 @@ def enhance_track(img):
 
 
 if __name__ == "__main__":
-    # img = cv2.imread(
-    #     f"/Users/jckpn/dev/picar/data/training_data/training_data/{np.random.randint(1, 10000)}.png"
-    # )
-    # state = view_to_state(img)
-    # exit()
+    img = cv2.imread(
+        f"/Users/jckpn/dev/picar/data/training_data/training_data/{np.random.randint(1, 10000)}.png"
+    )
+    # img = cv2.imread("utils/pic.jpg")
+    state = view_to_state(img)
+    exit()
 
     df = pd.read_csv("/Users/jckpn/dev/picar/data/training_norm.csv")
 

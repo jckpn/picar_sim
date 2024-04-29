@@ -9,7 +9,7 @@ class Picar(SimulatorObject):
         controller: PicarController = KeyboardController(),
         controller_interval=0.1,
         center=(0, 0),
-        size=(14, 28),
+        size=(18, 34),
         angle=0,
         image_path="objects/assets/picar.png",
     ):

@@ -13,8 +13,7 @@ class ExpertController(PicarController):
     def __init__(self, model_name):
         self.model_name = model_name
         model_path = f"controllers/moe_controller/models/{model_name}"
-        self.model = keras.models.load_model(model_path, safe_mode=False)
-        self.model.trainable = False  # disable dropout, etc
+        self.model = keras.models.load_model(model_path, safe_mode=False, compile=False)
     
     def __str__(self):
         return self.model_name
