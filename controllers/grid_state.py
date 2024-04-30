@@ -74,7 +74,7 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
         # and calculating where objects behind it are)
 
         # IMPORTANT: objects inside track must be inside track in the grid state too!
-        # might need way to encode car speed and wheel angle too? not sure how important
+        # might need way to encode car speed and wheel direction too? not sure how important
         # they'll be
 
         self.reset()
@@ -86,10 +86,10 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
             obj_name = obj.__class__.__name__
             obj_pos = obj.center - picar.center
 
-            # rotate targets pos by picar angle
-            angle = np.radians(-picar.angle)
+            # rotate targets pos by picar direction
+            direction = np.radians(-picar.direction)
             rotation_matrix = np.array(
-                [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
+                [[np.cos(direction), -np.sin(direction)], [np.sin(direction), np.cos(direction)]]
             )
             obj_pos = np.dot(rotation_matrix, obj_pos)
 
@@ -132,7 +132,7 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
 
     def get_collision_cells(self, width, dist, offset_x=0):
         # work out the cells in collision path of picar
-        # maybe: this should change size/shape based on speed and angle?
+        # maybe: this should change size/shape based on speed and direction?
         grid_width = width // self.cell_size
         grid_height = dist // self.cell_size
         x = self.grid_size // 2 - grid_width // 2
@@ -140,13 +140,13 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
         return self.state[-grid_height:, offset_x + x : offset_x - x]
 
     def estimate_state(self, picar, dt):
-        # estimate the picar's position based on its speed and angle in case object
+        # estimate the picar's position based on its speed and direction in case object
         # detection inferences are too slow etc
 
         # convert current state to list of objects with positions
         # ...
 
-        # update positions based on speed and angle
+        # update positions based on speed and direction
         # ...
         pass
 
@@ -154,7 +154,7 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
         return grid_size * self.cell_size
 
     def print(self):
-        return
+        return  # uncomment to disable printing (it can slow down simulation)
     
         state_str = self.get_state_as_str()
 

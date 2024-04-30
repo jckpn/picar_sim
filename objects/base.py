@@ -8,14 +8,14 @@ class SimulatorObject:  # TODO: inherit pygame sprite class?
         self,
         center,
         size,
-        angle=0,
+        direction=0,
         image_path=None,
         color=(0, 0, 0),
         can_collide=False,
     ):
         self.center = np.array(center, dtype=float)
         self.size = np.array(size, dtype=int)
-        self.angle = angle
+        self.direction = direction
         self.can_collide = can_collide
         self.image_path = image_path
         self.image = None
@@ -33,14 +33,16 @@ class SimulatorObject:  # TODO: inherit pygame sprite class?
         # the proper implementation should work for any object, but I've spent too long
         # trying so here's a janky solution that just follows picar or does nothing
 
-        angle = self.angle - perspective.angle if perspective else self.angle
+        direction = (
+            self.direction - perspective.direction if perspective else self.direction
+        )
 
         if perspective.__class__.__name__ == "Picar":
             blit_pos = scale_coords((
                     self.center[0] - perspective.center[0],
                     self.center[1] - perspective.center[1],
                 ))  # fmt: off
-            blit_pos = pygame.math.Vector2(blit_pos).rotate(angle)
+            blit_pos = pygame.math.Vector2(blit_pos).rotate(direction)
         else:
             blit_pos = scale_coords(self.center)
 
@@ -49,7 +51,7 @@ class SimulatorObject:  # TODO: inherit pygame sprite class?
         blit_pos += offset
 
         if self.image:
-            image = pygame.transform.rotate(self.image, -angle)
+            image = pygame.transform.rotate(self.image, -direction)
             rect = image.get_rect(center=blit_pos)
             display.blit(image, rect)
         else:

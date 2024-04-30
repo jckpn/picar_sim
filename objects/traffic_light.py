@@ -3,7 +3,7 @@ from objects.base import SimulatorObject
 
 class TrafficLight(SimulatorObject):
     def __init__(self, center, state="red"):
-        super().__init__(center, size=(5, 5), angle=0)
+        super().__init__(center, size=(5, 5), direction=0)
 
         assert state in ["red", "green"]
         self.set_state(state)
