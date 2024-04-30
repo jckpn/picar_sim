@@ -42,12 +42,12 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
         }
 
         self.cell_int_to_str = [  # convert state to symbols, e.g. for pattern matching
-            " ",
-            ".",
-            "O",
-            "R",
-            ">",
-            "<",
+            "░░",
+            "██",
+            "OO",
+            "RR",
+            ">>",
+            "<<",
         ]
 
         # idea: each object has own layer in grid state, then can use small CNN
@@ -154,9 +154,11 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
         return grid_size * self.cell_size
 
     def print(self):
+        return
+    
         state_str = self.get_state_as_str()
 
         for row in state_str.split("\n"):
             for cell in state_str:
-                print(cell, end=" ")
+                print(cell, end="")
             print()

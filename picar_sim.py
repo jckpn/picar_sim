@@ -36,14 +36,14 @@ class PicarSim:
             self.display = pygame.display.set_mode(scaler.scale_coords(env_size))
             self.clock = pygame.time.Clock()
 
-    def cvt_track_to_obstacles(self, track, res=2, threshold_color=245):
+    def cvt_track_to_obstacles(self, track, res=1.5, threshold_color=245):
         # iterate over track image and add objects where there are pixels
         track_objects = []
 
         # turn track to grid, then iterate over grid to add obstacle objects
         track_grid = cv2.resize(
             cv2.imread(track.image_path, cv2.IMREAD_GRAYSCALE),
-            track.size // res,
+            np.array(track.size / res, dtype=int),
         )
 
         for y in range(track_grid.shape[0]):

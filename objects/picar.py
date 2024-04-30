@@ -9,7 +9,7 @@ class Picar(SimulatorObject):
         controller: PicarController = KeyboardController(),
         controller_interval=0.1,
         center=(0, 0),
-        size=(18, 34),
+        size=(16, 32),
         angle=0,
         image_path="objects/assets/picar.png",
     ):
@@ -33,7 +33,7 @@ class Picar(SimulatorObject):
         self.turning_radius = 50.0  # measured
         self.accel = 30.0  # not measured in person yet
         self.breaking_accel = 60.0  # breaking is faster than accel
-        self.magic_wheel_multiplier = 3  # don't ask
+        self.magic_wheel_multiplier = 4  # don't ask
 
     def update(self, dt, env):
         # get controls

@@ -7,8 +7,10 @@ import time
 
 now = time.time()
 
+PREVIEWS = False
 
-def view_to_state(img, grid_size=25):
+
+def view_to_state(img, grid_size=30):
     preview(img)
 
     img = overhead_warp(img)
@@ -23,14 +25,15 @@ def view_to_state(img, grid_size=25):
 
     # Convert to HSV
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2HSV)
-    # preview(mask)
+    preview(mask)
 
     # Construct mask first
     # Threshold for white pixels
     S_MAX = 0.25
     V_MIN = 0.75
     mask = cv2.inRange(mask, (0, 0, int(V_MIN * 255)), (180, int(S_MAX * 255), 255))
-    # preview(mask)
+    preview(mask)
+    
 
     # Close the mask
     kernel = np.ones((9, 9), np.uint8)
@@ -55,10 +58,10 @@ def view_to_state(img, grid_size=25):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Threshold by HSV: S <= 0.3, V <= 0.5
-    S_THRESHOLD = 0.5
-    V_THRESHOLD = 0.25
+    S_THRESHOLD = 0.3
+    V_THRESHOLD = 0.4
     img = cv2.inRange(img, (0, 0, 0), (255, S_THRESHOLD * 255, V_THRESHOLD * 255))
-    img = cv2.dilate(img, np.ones((5, 5), np.uint8), iterations=1)
+    img = cv2.dilate(img, np.ones((6, 6), np.uint8), iterations=1)
     img = cv2.resize(img, (grid_size, grid_size), interpolation=cv2.INTER_NEAREST)
 
     preview(img)
@@ -69,51 +72,54 @@ def view_to_state(img, grid_size=25):
 
 
 def preview(img):
+    if not PREVIEWS:
+        return
+    
     global now
     print(f"time: {(time.time() - now)*1000:.2f}ms")
-    now = time.time()
     preview_img = cv2.resize(img, (320, 240), interpolation=cv2.INTER_NEAREST)
     cv2.imshow(str(now), preview_img)
-    # cv2.waitKey(0)
+    cv2.waitKey(0)
+    now = time.time()
 
 
 def overhead_warp(img):
-    # TODO: find the warp that puts ~60cm at the top of the image
     w, h = img.shape[1], img.shape[0]
 
-    # close, probably ~30cm
-    # top = 0.5 * h
-    # bot = 1.0 * h
-    # top_width = 0.6 * w
-    # bot_width = 1.6 * w
+    top = int(0.33 * h)
+    top_width = int(0.75 * w)
+    bot_width = int(2.5 * w)
+    offset_x = 0  # todo: measure this?
 
-    # further, like ~60cm
-    # top = 0.4 * h
-    # bot = 1.0 * h
-    # top_width = 0.4 * w
-    # bot_width = 1.7 * w
+    src = np.float32(
+        [
+            [w // 2 - top_width // 2 + offset_x, top],
+            [w // 2 + top_width // 2 + offset_x, top],
+            [w // 2 + bot_width // 2 + offset_x, h],
+            [w // 2 - bot_width // 2 + offset_x, h],
+        ]
+    )
 
-    top = 0.35 * h
-    bot = 1.0 * h
-    top_width = 0.5 * w
-    bot_width = 1.8 * w
+    # draw on image
+    # for i in range(4):
+    #     cv2.line(
+    #         img,
+    #         tuple(src[i].astype(int)),
+    #         tuple(src[(i + 1) % 4].astype(int)),
+    #         (255, 0, 0),
+    #         2,
+    #     )
+
+    preview(img)
 
     mat = cv2.getPerspectiveTransform(
-        # far
-        src=np.float32(
-            [
-                [160 - top_width // 2, top],
-                [160 + top_width // 2, top],
-                [160 - bot_width // 2, bot],
-                [160 + bot_width // 2, bot],
-            ]
-        ),
-        dst=np.float32([[0, 0], [320, 0], [0, 240], [320, 240]]),
+        src=src,
+        dst=np.float32([[0, 0], [w, 0], [w, h], [0, h]]),
     )
     img = cv2.warpPerspective(
         img,
         mat,
-        img.shape[:2][::-1],
+        (w, h),
         borderMode=cv2.BORDER_REPLICATE,
     )
 
@@ -130,34 +136,29 @@ def enhance_track(img):
 def print_state(state):
     """Print the state as a 25x25 grid of characters. ' ' for < 0.5, '█' for >= 0.5"""
     for row in state:
-        print("".join(["░" if cell < 0.75 else "█" for cell in row]))
+        print("".join(["░░" if cell < 0.75 else "██" for cell in row]))
 
 
 if __name__ == "__main__":
-    img = cv2.imread(
-        f"C:/Users/Dino/OneDrive - The University of Nottingham/Year 4 MSc/MLiS P2/notts-mlis-picar/data/training_data/training_data/{np.random.randint(1, 10000)}.png"
-    )
     # img = cv2.imread(
-    #    r"C:\Users\Dino\Downloads\New folder1\Car1\downloads_images\1709571067912_90_35.png"
+    #     f"/Users/jckpn/dev/picar/data/training_data/training_data/{np.random.randint(1, 10000)}.png"
     # )
-    # img = cv2.imread("utils/pic.jpg")
-    state = view_to_state(img)
-    print_state(state)
+    # # img = cv2.imread("utils/pic.jpg")
+    # state = view_to_state(img)
+    # print_state(state)
 
-    cv2.waitKey(0)
+    # exit()
 
-    exit()
+    df = pd.read_csv("/Users/jckpn/dev/picar/data/training_norm.csv")
 
-    # df = pd.read_csv("/Users/jckpn/dev/picar/data/training_norm.csv")
-
-    # with open("state_data.csv", "a") as f:
-    #     for entry in df.iterrows():
-    #         print(entry[0])
-    #         f.write(f"{entry[1]['speed']},{entry[1]['angle']}")
-    #         img_path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{int(entry[1]['image_id'])}.png"
-    #         img = cv2.imread(img_path)
-    #         state = view_to_state(img)
-    #         state = state.flatten()
-    #         for cell in state:
-    #             f.write(f",{cell:.2f}")
-    #         f.write("\n")
+    with open("state_data.csv", "a") as f:
+        for entry in df.iterrows():
+            print(entry[0])
+            f.write(f"{entry[1]['speed']},{entry[1]['angle']}")
+            img_path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{int(entry[1]['image_id'])}.png"
+            img = cv2.imread(img_path)
+            state = view_to_state(img)
+            state = state.flatten()
+            for cell in state:
+                f.write(f",{cell:.2f}")
+            f.write("\n")
