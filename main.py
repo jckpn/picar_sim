@@ -1,17 +1,17 @@
 import scenes
 from shared.model import MoeController
-from controllers import KeyboardController
+from controllers import GridCaptureController
 
 
 TRAINING = False
 
 
 def main():
-    sim = scenes.Scene7(
+    sim = scenes.Scene4(
         controller=MoeController(smoothing=0.0)
         if not TRAINING
-        else KeyboardController(),
-        speed_multiplier=2,
+        else GridCaptureController(),
+        speed_multiplier=1,
         controller_interval=0.05,
     )
 
