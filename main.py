@@ -11,7 +11,7 @@ def main():
         controller=MoeController(smoothing=0.0)
         if not TRAINING
         else GridCaptureController(),
-        speed_multiplier=1,
+        speed_multiplier=5,
         controller_interval=0.05,
     )
 

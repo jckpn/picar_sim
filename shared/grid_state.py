@@ -44,11 +44,11 @@ class GridState:
         track_layer = extract_track(img)
         self.set_layer("track", track_layer)
 
-        obstacles = extract_obstacles(img)
-        for layer_name, position in obstacles:
-            print(layer_name, position)
-            x, y = position
-            self.state[layer_name][y, x] = 1
+        # obstacles = extract_obstacles(img)
+        # for layer_name, position in obstacles:
+        #     print(layer_name, position)
+        #     x, y = position
+        #     self.state[layer_name][y, x] = 1
 
     def print(self):
         img = self.get_state_img()
