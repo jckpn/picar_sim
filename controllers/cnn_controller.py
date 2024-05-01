@@ -11,7 +11,7 @@ class CNNController:
 
         # load model from file
         self.STEER_MODEL = tf.keras.models.load_model(
-            "controllers/models/roadwarp-angle-32.h5"
+            "controllers/models/roadwarp-direction-32.h5"
         )
 
         self.last_outputs = 1, 0.5  # placeholder

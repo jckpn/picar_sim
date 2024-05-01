@@ -6,7 +6,7 @@ class TrackMaterial(SimulatorObject):
         super().__init__(
             center,
             size=(2, 2),
-            angle=0,
+            direction=0,
             color=(255, 0, 255),
             can_collide=False,
         )

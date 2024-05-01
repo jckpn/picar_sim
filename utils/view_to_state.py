@@ -57,7 +57,7 @@ def view_to_state(img, grid_size=30):
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    # Threshold by HSV: S <= 0.3, V <= 0.5
+    # Threshold track by HSV: S <= 0.3, V <= 0.5
     S_THRESHOLD = 0.3
     V_THRESHOLD = 0.4
     img = cv2.inRange(img, (0, 0, 0), (255, S_THRESHOLD * 255, V_THRESHOLD * 255))
@@ -67,7 +67,6 @@ def view_to_state(img, grid_size=30):
     preview(img)
 
     state = img / 255
-    print(state.shape)
     return state
 
 

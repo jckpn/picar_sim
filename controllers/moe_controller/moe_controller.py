@@ -11,7 +11,7 @@ class MoeController(PicarController):
 
         # initialise models
         self.experts = {
-            "follow": ExpertController("cam-new.keras"),
+            "follow": ExpertController("cam.keras"),
             # "left_turns": ExpertController("left_turns.keras"),
             # "right_turns": ExpertController("right_turns.keras"),
             # "wait_at_junction": ExpertController("follow.keras"),  # TODO
@@ -34,7 +34,7 @@ class MoeController(PicarController):
             (1 - s) * expert_controls[i] + s * self.last_controls[i] for i in range(2)
         ]
         self.last_controls = expert_controls
-        print(f"{str(self.current_expert)}: {expert_controls}")
+        # print(f"{str(self.current_expert)}: {expert_controls}")
         return expert_controls
 
     def update_gate(self, state):

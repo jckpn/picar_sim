@@ -69,7 +69,7 @@ class PicarSim:
         self.picar.center = np.array(
             [np.random.rand() * 200 - 100, np.random.rand() * 100 - 50]
         )
-        self.picar.angle = np.random.randint(0, 360)
+        self.picar.direction = np.random.randint(0, 360)
 
     def fill_obstacle_regions(self):
         num_obstacles = np.random.randint(1, 4)  # some variance between simulations
