@@ -9,8 +9,8 @@ class GridStateController:
         self.state.observe_real(image)
         return self.predict_from_state(self.state)
 
-    def predict_from_sim(self, picar, env):  # for use in simulation
-        self.state.observe_sim(picar, env, resolution=2)
+    def predict_sim(self, picar, env):  # for use in simulation
+        self.state.observe_sim(picar, env, range=60)
         return self.predict_from_state(self.state)
 
     def predict_from_state(self, state):  # override in controller subclass

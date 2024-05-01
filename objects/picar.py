@@ -53,7 +53,7 @@ class Picar(SimulatorObject):
             return
         self.dt_since_controller = 0
 
-        angle, speed = self.controller.predict_from_sim(self, env)
+        angle, speed = self.controller.predict_sim(self, env)
 
         self.speed = np.clip(speed, *self.speed_range)  # ensure valid values
         self.angle = np.clip(angle, *self.angle_range)

@@ -1,11 +1,14 @@
 import numpy as np
+from .cam_utils import overhead_warp, extract_track
 
 
 class GridState:
     def __init__(self, size=30):
         self.size = size
+        self.empty_state()
 
-        empty = np.zeros((size, size))
+    def empty_state(self):
+        empty = np.zeros((self.size, self.size))
         self.state = {
             "track": empty.copy(),
             "obstacle": empty.copy(),
@@ -31,8 +34,8 @@ class GridState:
     def set_layer(self, layer_name, contents):
         self.state[layer_name] = contents.copy()
 
-    def observe_sim(self, picar, env, resolution=2):
-        new_state = {}
+    def observe_sim(self, picar, env, range=60):
+        self.empty_state()
 
         for object in env:
             if object == picar:
@@ -46,11 +49,12 @@ class GridState:
             position = np.dot(rotation, position)
 
             # offset to put picar at bottom-center
-            offset_x = self.size / 2 * resolution + 2  # +2 camera x offset
-            offset_y = self.size * resolution + 15  # +15 camera distance offset
+            offset_x = range / 2 + 2  # +2 camera x offset
+            offset_y = range + 15  # +15 camera distance offset
             position += np.array([offset_x, offset_y])
 
             # quantise to state grid
+            resolution = range / self.size
             position = np.array(position / resolution, dtype=int)
 
             # ignore if out of range
@@ -67,21 +71,19 @@ class GridState:
                     "TurnRightSign": "turn_right_sign",
                     "TurnLeftSign": "turn_left_sign",
                 }.get(object_name)
-                if state_name not in new_state:
-                    new_state[state_name] = np.zeros((self.size, self.size))
-                new_state[state_name][position[1], position[0]] = 1
+
+                self.state[state_name][position[1], position[0]] = 1
+
             except Exception as e:
                 print(e)
 
-        # only replace layer if it exists in new layer
-        for layer_name, contents in new_state.items():
-            if layer_name in self.state:
-                self.state[layer_name] = contents
-            else:
-                self.state[layer_name] = np.zeros((self.size, self.size))
+    def observe_real(self, img):
+        self.empty_state()
 
-    def observe_real(self):
-        pass
+        img = overhead_warp(img)
+
+        track_layer = extract_track(img)
+        self.set_layer("track", track_layer)
 
     def print(self):
         for row in self.get_layer("track"):

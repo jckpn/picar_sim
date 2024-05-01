@@ -6,7 +6,7 @@ class KeyboardController(PicarController):
     def __init__(self):
         super().__init__()
 
-    def predict_from_sim(self, *args, **kwargs):
+    def predict_sim(self, *args, **kwargs):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
