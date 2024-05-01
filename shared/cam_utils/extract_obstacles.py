@@ -65,7 +65,7 @@ def extract_obstacles(img, state_size=30):
     }
     y_pred = yolomodel.decode_predictions(y_pred, img)  # decode pred tensor
     
-    print(y_pred)
+    # print(y_pred)
 
     boxes = y_pred["boxes"][0].numpy()
     classes = y_pred["classes"][0].numpy()
@@ -78,7 +78,7 @@ def extract_obstacles(img, state_size=30):
         x, y, w, h = np.array(box, dtype=int)
         class_name = class_map[class_]
         
-        print(class_name, x, y, w, h)
+        # print(class_name, x, y, w, h)
 
         # got the object from view, now add to state
         # use bottom-center of object for position

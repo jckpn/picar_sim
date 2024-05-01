@@ -24,7 +24,7 @@ class MoeController(GridStateController):
     def predict_from_state(self, state):  # talk about order/priority of operations here
         intervention = self.check_interventions(state)
         if intervention is not None:
-            print(f"!! INTERVENTION: {intervention.message} !!")
+            print(f"!! INTERVENTION: {intervention['message']} !!")
             return intervention  # don't bother with smoothing if urgent intervention
 
         # if no urgent intervention, get controls as normal
