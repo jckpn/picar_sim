@@ -9,11 +9,8 @@
 #   4.  the presence of a junction, and which way the sign indicates to go
 #   5. more?
 
-# ideally compare this with standard approach (cnn -> controls)
-
-# TODO: picar should be trained to not move unless track is detected
+# ALSO: picar should be trained to not move unless track is detected
 # (intervention model can handle this)
-# TODO: unknown obstacles should be detected too
 
 import numpy as np
 
@@ -41,7 +38,7 @@ class GridState:  # TODO: figure out what grid size corresponds to the view we g
             "TurnLeftSign": 5,
         }
 
-        self.cell_int_to_str = [  # convert state to symbols, e.g. for pattern matching
+        self.cell_int_to_str = [  # convert state to symbols for printing
             "░░",
             "██",
             "OO",

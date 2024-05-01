@@ -6,19 +6,19 @@ class KeyboardController(PicarController):
     def __init__(self):
         super().__init__()
 
-    def get_controls(self, *args, **kwargs):
+    def predict_sim(self, *args, **kwargs):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            throttle = 1.0
+            speed = 35
         else:
-            throttle = 0.0
+            speed = 0
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            steer = 0.0
+            angle = 50
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            steer = 1.0
+            angle = 130
         else:
-            steer = 0.5
+            angle = 90
 
-        return throttle, steer
+        return angle, speed

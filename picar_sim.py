@@ -10,7 +10,7 @@ class PicarSim:
         self,
         picar,
         track,
-        env_size,  # viewable window size
+        env_size=(350, 200),  # viewable area in cm
         update_interval=0.01,
         graphics=True,
         speed_multiplier=1,
@@ -27,8 +27,8 @@ class PicarSim:
         self.speed_multiplier = speed_multiplier
         self.perspective = perspective
         self.obstacle_regions = []
-
-        self.cvt_track_to_obstacles(track)  # add as obstacles to get state
+        
+        self.cvt_track_to_obstacles(track)  # add as obstacles to enable track state
 
         if graphics:
             self.framerate = 1 / update_interval * speed_multiplier
@@ -101,7 +101,7 @@ class PicarSim:
         # refresh display with new render
         pygame.display.update()
 
-    def loop(self):
+    def start_loop(self):
         while True:
             for _ in range(self.speed_multiplier):
                 self.update_env(self.update_interval)
