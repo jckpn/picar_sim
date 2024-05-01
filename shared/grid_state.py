@@ -1,5 +1,9 @@
 import numpy as np
-from .cam_utils import overhead_warp, extract_track
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from cam_utils import extract_track, extract_obstacles
 
 
 class GridState:
@@ -12,9 +16,9 @@ class GridState:
         self.state = {
             "track": empty.copy(),
             "obstacle": empty.copy(),
-            "red_traffic_light": empty.copy(),
-            "turn_right_sign": empty.copy(),
-            "turn_left_sign": empty.copy(),
+            "red_light": empty.copy(),
+            "right_sign": empty.copy(),
+            "left_sign": empty.copy(),
         }
 
     def get_state_dict(self):
@@ -33,6 +37,42 @@ class GridState:
 
     def set_layer(self, layer_name, contents):
         self.state[layer_name] = contents.copy()
+
+    def observe_real(self, img):
+        self.empty_state()
+
+        track_layer = extract_track(img)
+        self.set_layer("track", track_layer)
+
+        obstacles = extract_obstacles(img)
+        for layer_name, position in obstacles:
+            print(layer_name, position)
+            x, y = position
+            self.state[layer_name][y, x] = 1
+
+    def print(self):
+        img = self.get_state_img()
+        for row in img:
+            for px in row:
+                px_str = "░░"
+
+                if px[0] == 1:
+                    px_str = "██"
+
+                if px[1] == 1:
+                    px_str = "XX"
+
+                if px[2] == 1:
+                    px_str = "RL"
+
+                if px[3] == 1:
+                    px_str = ">>"
+
+                if px[4] == 1:
+                    px_str = "<<"
+
+                print(px_str, end="")
+            print()
 
     def observe_sim(self, picar, env, range=60):
         self.empty_state()
@@ -67,24 +107,23 @@ class GridState:
                 state_name = {
                     "TrackMaterial": "track",
                     "Obstacle": "obstacle",
-                    "TrafficLight": "red_traffic_light",
-                    "TurnRightSign": "turn_right_sign",
-                    "TurnLeftSign": "turn_left_sign",
+                    "TrafficLight": "red_light",
+                    "TurnRightSign": "right_sign",
+                    "TurnLeftSign": "left_sign",
                 }.get(object_name)
 
-                self.state[state_name][position[1], position[0]] = 1
+                x, y = position
+                self.state[state_name][y, x] = 1
 
             except Exception as e:
                 print(e)
 
-    def observe_real(self, img):
-        self.empty_state()
 
-        img = overhead_warp(img)
+# test real-life observation
+if __name__ == "__main__":
+    import cv2
 
-        track_layer = extract_track(img)
-        self.set_layer("track", track_layer)
-
-    def print(self):
-        for row in self.get_layer("track"):
-            print("".join(["██" if cell > 0.5 else "░░" for cell in row]))
+    img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/26.png")
+    state = GridState()
+    state.observe_real(img)
+    state.print()

@@ -9,7 +9,9 @@ class MoeController(GridStateController):
 
         # initialise models
         self.experts = {
-            "follow": ExpertController("follow_30_binary", track_only=True, steer_only=True),
+            "follow": ExpertController(
+                "follow_30_binary", track_only=True, steer_only=True
+            ),
             # "left_turns": ExpertController("left_turns.keras"),
             # "right_turns": ExpertController("right_turns.keras"),
             # "wait_at_junction": ExpertController("follow.keras"),  # TODO
@@ -29,7 +31,7 @@ class MoeController(GridStateController):
         self.update_gate(state)
 
         angle, speed = self.current_expert.predict_from_state(state)
-        
+
         # state.print()
         # print(f"{str(self.current_expert)}: angle={angle}, speed={speed}")
 
@@ -49,11 +51,14 @@ class MoeController(GridStateController):
         self.current_expert = self.experts[best_expert]
 
     def check_interventions(self, state):
-        # e.g.
-        # return {
-        #     "message": "obstacle in path!",
-        #     "angle": 0,
-        #     "speed": 0,
-        # }
+        # check if any obstacles in immediate
 
-        return None
+        obstacle_layer = state.get_layer("obstacle")
+
+        obstacle_layer = obstacle_layer[0:15, :]  # only check closest 30cm
+        if np.sum(obstacle_layer) > 0:
+            return {
+                "message": "obstacle in path!",
+                "angle": 90,
+                "speed": 0,
+            }

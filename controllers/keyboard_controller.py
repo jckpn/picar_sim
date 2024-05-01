@@ -6,7 +6,7 @@ class KeyboardController(PicarController):
     def __init__(self):
         super().__init__()
 
-    def predict_sim(self, *args, **kwargs):
+    def predict_from_state(self, *args):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
@@ -15,9 +15,9 @@ class KeyboardController(PicarController):
             speed = 0
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            angle = 50
+            angle = 60
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            angle = 130
+            angle = 120
         else:
             angle = 90
 
