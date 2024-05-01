@@ -56,7 +56,12 @@ model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
 # %%
 # Convert the model to a TFLite model
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
+# converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [
+    tf.lite.OpsSet.TFLITE_BUILTINS,  # enable TensorFlow Lite ops.
+    tf.lite.OpsSet.SELECT_TF_OPS,  # enable TensorFlow ops.
+]
+converter.allow_custom_ops = True
 tflite_model = converter.convert()
 
 # Save the TFLite model
