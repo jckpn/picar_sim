@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import os
 import sys
-import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -55,26 +54,12 @@ def extract_track(img, state_size=30):
 
 
 if __name__ == "__main__":
-    # img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
+    img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
 
-    # track_layer = extract_track(
-    #     cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
-    # )
+    track_layer = extract_track(
+        cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
+    )
 
-    # track_layer = cv2.resize(track_layer, (240, 240), interpolation=cv2.INTER_NEAREST)
-    # cv2.imshow("Track", track_layer)
-    # cv2.waitKey(0)
-
-    df = pd.read_csv("/Users/jckpn/dev/picar/data/training_norm.csv")
-
-    with open("state_data.csv", "a") as f:
-        for entry in df.iterrows():
-            print(entry[0])
-            f.write(f"{entry[1]['speed']},{entry[1]['angle']}")
-            img_path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{int(entry[1]['image_id'])}.png"
-            img = cv2.imread(img_path)
-            state = extract_track(img)
-            state = state.flatten()
-            for cell in state:
-                f.write(f",{cell:.2f}")
-            f.write("\n")
+    track_layer = cv2.resize(track_layer, (240, 240), interpolation=cv2.INTER_NEAREST)
+    cv2.imshow("Track", track_layer)
+    cv2.waitKey(0)

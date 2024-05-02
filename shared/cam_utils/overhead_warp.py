@@ -29,14 +29,7 @@ def overhead_warp_point(x, y):
 
 
 def overhead_warp_img(img):
-    img = cv2.warpPerspective(
-        img,
-        overhead_transform,
-        (w, h),
-        borderMode=cv2.BORDER_REPLICATE,
-    )
-
-    return img
+    return cv2.warpPerspective(img, overhead_transform, (w, h))
 
 
 if __name__ == "__main__":

@@ -9,9 +9,9 @@ from cam_utils import extract_track, extract_obstacles
 class GridState:
     def __init__(self, size=30):
         self.size = size
-        self.empty_state()
+        self.reset_state()
 
-    def empty_state(self):
+    def reset_state(self):
         empty = np.zeros((self.size, self.size))
         self.state = {
             "track": empty.copy(),
@@ -39,7 +39,7 @@ class GridState:
         self.state[layer_name] = contents.copy()
 
     def observe_real(self, img):
-        self.empty_state()
+        self.reset_state()
 
         track_layer = extract_track(img)
         self.set_layer("track", track_layer)
@@ -50,32 +50,8 @@ class GridState:
         #     x, y = position
         #     self.state[layer_name][y, x] = 1
 
-    def print(self):
-        img = self.get_state_img()
-        for row in img:
-            for px in row:
-                px_str = "░░"
-
-                if px[0] == 1:
-                    px_str = "██"
-
-                if px[1] == 1:
-                    px_str = "XX"
-
-                if px[2] == 1:
-                    px_str = "RL"
-
-                if px[3] == 1:
-                    px_str = ">>"
-
-                if px[4] == 1:
-                    px_str = "<<"
-
-                print(px_str, end="")
-            print()
-
     def observe_sim(self, picar, env, range=60):
-        self.empty_state()
+        self.reset_state()
 
         for object in env:
             if object == picar:
@@ -117,6 +93,30 @@ class GridState:
 
             except Exception as e:
                 print(e)
+
+    def print(self):
+        img = self.get_state_img()
+        for row in img:
+            for px in row:
+                px_str = "░░"
+
+                if px[0] == 1:
+                    px_str = "██"
+
+                if px[1] == 1:
+                    px_str = "XX"
+
+                if px[2] == 1:
+                    px_str = "RL"
+
+                if px[3] == 1:
+                    px_str = ">>"
+
+                if px[4] == 1:
+                    px_str = "<<"
+
+                print(px_str, end="")
+            print()
 
 
 # test real-life observation
