@@ -15,9 +15,9 @@ class KeyboardController(PicarController):
             speed = 0
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            angle = 60
+            angle = 72
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            angle = 120
+            angle = 108
         else:
             angle = 90
 

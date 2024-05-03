@@ -43,8 +43,6 @@ class ExpertController:
         return self.model_name
 
     def predict_from_state(self, state):
-        # get relevant part of state for this controller
-
         if self.track_only:
             x = state.get_layer("track")
             x = np.expand_dims(x, axis=-1)  # reshape track from (30, 30) -> (30, 30, 1)
@@ -63,6 +61,8 @@ class ExpertController:
             y_hat = self.model(x)[0].numpy()
 
         angle, speed = y_hat if not self.steer_only else [y_hat[0], 1.0]
+        
+        print(f"{self.model_name}: angle={angle}, speed={speed}")
 
         # predictions are normalised -- convert to car angle/speed
         angle = angle * 80 + 50

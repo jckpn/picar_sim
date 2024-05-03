@@ -18,7 +18,7 @@ class Picar(SimulatorObject):
         # controller variables
         self.controller = controller
         self.controller_interval = controller_interval
-        self.dt_since_controller = 0  # to keep track of inference interval
+        self.dt_since_controller = 0  # to monitor controller update interval
 
         # dynamic variables
         self.speed = 0.0
@@ -26,9 +26,9 @@ class Picar(SimulatorObject):
         self.angular_velocity = 0.0
 
         # constants
-        self.speed_range = (0, 35)  # 35 = standard, 50 = ludicrous, 100 = plaid
-        self.angle_range = (50, 130)  # max wheel angle, from docs
-        self.wheelbase = 14.4  # distance between front and back wheels
+        self.max_speed = 35
+        self.angle_range = (50, 130)
+        self.wheelbase = 14.4  # distance between front and back wheels for turn radius
 
     def update(self, dt, env):
         self.update_controls(dt, env)
@@ -55,8 +55,13 @@ class Picar(SimulatorObject):
 
         angle, speed = self.controller.predict_sim(self, env)
 
-        self.speed = np.clip(speed, *self.speed_range)  # ensure valid values
+        self.speed = np.clip(speed, 0, 35)  # ensure valid values
         self.angle = np.clip(angle, *self.angle_range)
+
+        self.speed = self.speed / 35 * self.max_speed  # scale to max speed
+
+    def set_max_speed(self, max_speed):
+        self.max_speed = max_speed
 
     def check_for_collisions(self, environment):
         if not self.can_collide:
