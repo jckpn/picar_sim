@@ -7,9 +7,9 @@ class TrackMaterial(SimulatorObject):
             center,
             size=(2, 2),
             direction=0,
-            color=(255, 0, 255),
+            color=(0, 0, 0),
             can_collide=False,
         )
     
     def render(self, *args):
-        pass  # don't want track rendered
+        pass  # too many, slows down sim

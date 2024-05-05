@@ -29,26 +29,30 @@ class SimulatorObject:  # TODO: inherit pygame sprite class?
     def update(self, dt, env):
         pass
 
-    def render(self, display, perspective):
-        # the proper implementation should work for any object, but I've spent too long
-        # trying so here's a janky solution that just follows picar or does nothing
-
+    def get_relative_pos(self, perspective, display):
         direction = (
             self.direction - perspective.direction if perspective else self.direction
         )
 
         if perspective.__class__.__name__ == "Picar":
-            blit_pos = scale_coords((
+            pos = scale_coords((
                     self.center[0] - perspective.center[0],
                     self.center[1] - perspective.center[1],
                 ))  # fmt: off
-            blit_pos = pygame.math.Vector2(blit_pos).rotate(direction)
+            pos = pygame.math.Vector2(pos).rotate(direction)
         else:
-            blit_pos = scale_coords(self.center)
+            pos = scale_coords(self.center)
 
         # apply offset so (0, 0) is center of display
-        offset = (display.get_width() // 2, display.get_height() // 2)
-        blit_pos += offset
+        pos += (display.get_width() // 2, display.get_height() // 2)
+
+        return pos, direction
+
+    def render(self, display, perspective):
+        # the proper implementation should work for any object, but I've spent too long
+        # trying so here's a janky solution that works for the picar
+
+        blit_pos, direction = self.get_relative_pos(perspective, display)
 
         if self.image:
             image = pygame.transform.rotate(self.image, -direction)
@@ -58,3 +62,8 @@ class SimulatorObject:  # TODO: inherit pygame sprite class?
             pygame.draw.circle(
                 display, self.color, blit_pos, scale_coords(self.size[0] // 2)
             )
+
+            # add class name as text
+            font = pygame.font.Font(None, 20)
+            text = font.render(self.__class__.__name__, True, self.color)
+            display.blit(text, blit_pos + (5, 5))

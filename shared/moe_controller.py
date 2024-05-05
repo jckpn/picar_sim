@@ -10,11 +10,11 @@ class MoeController(GridStateController):
         # initialise models
         self.experts = {
             "follow": ExpertController("follow_30", steer_only=True),
-            "left_turns": ExpertController("follow_30", steer_only=True),
-            "right_turns": ExpertController("follow_30", steer_only=True),
+            "left_turns": ExpertController("left_30", steer_only=True),
+            "right_turns": ExpertController("right_30", steer_only=True),
         }
-        self.default_expert = default_expert
         self.current_expert = self.experts[default_expert]
+        self.default_expert = self.current_expert
 
         # init vars for smoothing
         self.smoothing = smoothing
@@ -22,7 +22,7 @@ class MoeController(GridStateController):
         self.last_speed = 0
 
     def predict_from_state(self, state):  # talk about order/priority of operations here
-        intervention = self.check_interventions(state)
+        intervention = self.check_interventions(state, self.last_angle, self.last_speed)
         if intervention is not None:
             state.print()
             print(f"!! INTERVENTION: {intervention['message']} !!")
@@ -36,10 +36,10 @@ class MoeController(GridStateController):
         self.update_gate(state)
         angle, speed = self.current_expert.predict_from_state(state)
 
-        # state.print()
+        state.print()
 
         # state.print()
-        # print(f"{str(self.current_expert)}: angle={angle}, speed={speed}")
+        print(f"{str(self.current_expert)}: angle={angle}, speed={speed}")
 
         # apply smoothing
         if self.smoothing > 0:
@@ -50,23 +50,26 @@ class MoeController(GridStateController):
         return angle, speed
 
     def update_gate(self, state):
-        new_expert = self.default_expert
-        
+        if self.current_expert != self.default_expert:
+            print(str(self.current_expert), str(self.default_expert))
+            return  # already changed expert
+
         left_sign_layer = state.get_layer("left_sign")
         right_sign_layer = state.get_layer("right_sign")
-        
-        if np.sum(left_sign_layer) > np.sum(right_sign_layer):
-            new_expert = "left_turns"
-        elif np.sum(right_sign_layer) > np.sum(left_sign_layer):
-            new_expert = "right_turns"
 
-        self.current_expert = self.experts[new_expert]
+        if np.sum(left_sign_layer) > 1:
+            self.current_expert = self.experts["left_turns"]
+        elif np.sum(right_sign_layer) > 1:
+            self.current_expert = self.experts["right_turns"]
 
-    def check_interventions(self, state):
-        # check if any obstacles in immediate collision path
-        # path_mask = np.zeros((state.size, state.size))
+    def check_interventions(self, state, angle, speed):
+        # check if any obstacles in collision path
+        # calculate path of car from angle
+
+        path_mask = self.get_path_mask(state, angle, speed)
+
         obstacle_layer = state.get_layer("obstacle")
-        obstacle_layer = obstacle_layer[15:, 10:20]  # bottom-center 6th of grid
+        obstacle_layer = obstacle_layer * path_mask  # bitwise and
         if np.sum(obstacle_layer) > 0:
             return {
                 "message": "OBSTACLE IN PATH",
@@ -74,15 +77,30 @@ class MoeController(GridStateController):
                 "speed": 0,
             }
 
-        # check if obstacles in steering path
-        # ...
-
-        # check if any red lights
+        # check if any red lights around
         red_light_layer = state.get_layer("red_light")
-        red_light_layer = red_light_layer[20:, :]  # check sides of grid
+        red_light_layer = red_light_layer[15:, :]
         if np.sum(red_light_layer) > 0:
             return {
                 "message": "RED LIGHT",
                 "angle": 90,
                 "speed": 0,
             }
+
+    def get_path_mask(self, state, angle, speed):
+        path_mask = np.zeros((state.size, state.size))
+        lookahead_time = 1
+        path_dist = int(speed * lookahead_time)
+        
+          # immediate collisions
+        path_mask[-path_dist // 4 :, 10:20] = 1
+         # imminent collisions
+         
+        if angle > 100:
+            path_mask[-path_dist // 2 :, 12:30] = 1
+        elif angle < 80:
+            path_mask[-path_dist // 2 :, 0:18] = 1
+        else:
+            path_mask[-path_dist // 2 :, 10:20] = 1
+
+        return path_mask
