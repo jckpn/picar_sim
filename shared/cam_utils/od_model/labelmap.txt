@@ -1,0 +1,9 @@
+box
+green_light
+left_arrow
+no_light
+person
+red_light
+right_arrow
+tree
+unknown_arrow
