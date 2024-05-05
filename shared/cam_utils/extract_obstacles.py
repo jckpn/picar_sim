@@ -91,6 +91,7 @@ def extract_obstacles(img, state_size=30):
 
         # ignore if out of range
         if position.max() >= state_size or position.min() < 0:
+            # TODO: ADD TO BORDER INSTEAD OF DISCARDING?
             continue
 
         obstacles.append((class_name, position))

@@ -16,7 +16,6 @@ class PicarSim:
         speed_multiplier=1,
         graphics_perspective=None,
         perspective=None,
-        obstacle_regions=[],
     ):
         self.picar = picar  # keep a pointer to picar for easy access
         self.env = [track, picar]
@@ -26,8 +25,7 @@ class PicarSim:
         self.graphics_perspective = graphics_perspective
         self.speed_multiplier = speed_multiplier
         self.perspective = perspective
-        self.obstacle_regions = []
-        
+
         self.cvt_track_to_obstacles(track)  # add as obstacles to enable track state
 
         if graphics:
@@ -36,7 +34,7 @@ class PicarSim:
             self.display = pygame.display.set_mode(scaler.scale_coords(env_size))
             self.clock = pygame.time.Clock()
 
-    def cvt_track_to_obstacles(self, track, res=1.5, threshold_color=245):
+    def cvt_track_to_obstacles(self, track, res=1, threshold_color=240):
         # iterate over track image and add objects where there are pixels
         track_objects = []
 
@@ -57,10 +55,18 @@ class PicarSim:
         self.add_objects(track_objects)
         print(f"Converted track image to {len(track_objects)} obstacles")
 
-    def reset_objects(self):
-        for obj in self.env:
-            if obj.__class__.__name__ == "Obstacle":
-                self.env.remove(obj)
+    def add_random_obstacles(self, x1, y1, x2, y2):
+        # for obj in self.env:
+        #     if obj.__class__.__name__ == "Obstacle":
+        #         self.env.remove(obj)
+
+        num_obstacles = np.random.randint(1, 4)  # some variance between simulations
+        obstacles = []
+        for _ in range(num_obstacles):
+            x, y = np.random.randint(x1, x2), np.random.randint(y1, y2)
+            obstacles.append(objects.Obstacle(center=(x, y)))
+            print(f"adding obstacle at {x}, {y}")
+        self.add_objects(obstacles)
 
     def add_objects(self, new_objects):
         self.env.extend(new_objects)
@@ -70,16 +76,6 @@ class PicarSim:
             [np.random.rand() * 200 - 100, np.random.rand() * 100 - 50]
         )
         self.picar.direction = np.random.randint(0, 360)
-
-    def fill_obstacle_regions(self):
-        num_obstacles = np.random.randint(1, 4)  # some variance between simulations
-
-        for rect in self.obstacle_regions:
-            rx, ry, rw, rh = rect
-            for _ in range(num_obstacles):
-                x = np.random.randint(rx, rx + rw)
-                y = np.random.randint(ry, ry + rh)
-                self.add_objects([objects.Obstacle(center=(x, y))])
 
     def set_perspective(self, perspective: objects.SimulatorObject):
         self.perspective = perspective
@@ -114,11 +110,8 @@ class PicarSim:
                         quit()
 
                 # randomly shuffle obstacles if the scene has them
-                if np.random.rand() < self.update_interval * 0.2:  # every ~5s
-                    self.reset_objects()
-
-                    if 0.5:
-                        self.fill_obstacle_regions()
+                # if np.random.rand() < self.update_interval * 0.2:  # every ~5s
+                #     self.reset_objects()
 
                 self.render_env()
                 self.clock.tick(self.framerate)

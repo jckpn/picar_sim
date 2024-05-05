@@ -23,16 +23,14 @@ class Scene1(PicarSim):
 class Scene2(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        self.obstacle_regions = [(-100, -50, 170, 30), (-100, 20, 170, 30)]
+        self.add_random_obstacles(-150, -30, 100, -25)
 
 
 # 3. As (1), but stopping if a pedestrian is in the road, as shown in Fig. 3.
 class Scene3(Scene1):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        self.obstacle_regions = [(-100, -50, 200, 100)]
+        self.add_random_obstacles(-150, -25, 100, 25)
 
 
 # 4. Driving around the oval track in both directions, as shown in Fig. 4.
@@ -83,8 +81,19 @@ class Scene6(Scene4):
 # shown in Fig. 7.
 class Scene7(PicarSim):
     def __init__(self, controller, controller_interval=0.1, **kwargs):
+        start_pos = (
+            {
+                "center": (-150, 0),
+                "direction": 0,
+            }
+            if np.random.rand() < 0.5
+            else {
+                "center": (-130, 0),
+                "direction": 180,
+            }
+        )
         super().__init__(
-            picar=objects.Picar(controller, controller_interval, center=(-160, 0)),
+            picar=objects.Picar(controller, controller_interval, **start_pos),
             track=objects.tracks.Figure8(),
             **kwargs,
         )
@@ -94,21 +103,45 @@ class Scene7(PicarSim):
 class Scene8(Scene7):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        self.obstacle_regions = [(-20, -20, 40, 40)]
+        self.add_random_obstacles(-30, -30, 30, 30)
 
 
 # 9. Stopping due to a red traffic light at the intersection, then continuing when it
 # changes to green, as shown in Fig. 9.
 
+class Scene9(Scene7):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_objects([objects.RedLight(center=(0, -40))])
 
 # 10. Performing a left turn at the T-junction, in response to a traffic sign, as shown
 # in Fig. 10. We will place 2 left turn signs at positions indicated in the figure.
+
+
+class Scene10(Scene1):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_objects(
+            [
+                objects.LeftSign(center=(145, -10)),
+                objects.LeftSign(center=(145, 10)),
+            ]
+        )
+
 
 # 11. Performing a right turn at the T-junction, in response to a traffic sign, as shown
 # in Fig. 11. We will place 2 right turn signs at positions indicated in the figure.
 # Note this ‘unprotected’ right (left in the USA) has been a major difficulty in
 # the Tesla autonomous beta testing program.
+class Scene11(Scene1):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_objects(
+            [
+                objects.RightSign(center=(145, -10)),
+                objects.RightSign(center=(145, 10)),
+            ]
+        )
 
 # 12. Driving round the oval track, as (4), but at a speed of 50. Can your car respond
 # fast enough at this speed?

@@ -8,8 +8,19 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from overhead_warp import overhead_warp_img
 
 
+def preview(img):
+    return
+    img = cv2.resize(img, (320, 320), interpolation=cv2.INTER_NEAREST_EXACT)
+    if len(img.shape) < 3 or img.shape[2] != 3:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    cv2.imshow("", img)
+    cv2.waitKey(0)
+
+
 def extract_track(img, state_size=30):
     img = overhead_warp_img(img)
+
+    preview(img)
 
     # Increase contrast
     mask = cv2.convertScaleAbs(img, alpha=1.5, beta=0)
@@ -48,18 +59,28 @@ def extract_track(img, state_size=30):
     img = cv2.dilate(img, np.ones((6, 6), np.uint8), iterations=1)
     img = cv2.resize(img, (state_size, state_size), interpolation=cv2.INTER_NEAREST)
 
+    preview(img)
+
     track_layer = img / 255
 
     return track_layer
 
 
 if __name__ == "__main__":
-    img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
-
-    track_layer = extract_track(
-        cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
-    )
-
-    track_layer = cv2.resize(track_layer, (240, 240), interpolation=cv2.INTER_NEAREST)
-    cv2.imshow("Track", track_layer)
+    demo = np.zeros((240*2, 240*8, 3), dtype=np.uint8)
+    for i in range(8):
+        example = np.zeros((240*2, 240, 3), dtype=np.uint8)
+        
+        id = np.random.randint(1, 13000)
+        path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{id}.png"
+        img = cv2.imread(path)
+        track = extract_track(img.copy()) * 255
+        img = cv2.resize(img, (240, 240), interpolation=cv2.INTER_NEAREST_EXACT)
+        track = cv2.resize(track, (240, 240), interpolation=cv2.INTER_NEAREST_EXACT)
+        track = np.stack((track, track, track), axis=-1)
+        
+        demo[:240, i*240:(i+1)*240] = img
+        demo[240:, i*240:(i+1)*240] = track
+    
+    cv2.imshow("demo", demo)
     cv2.waitKey(0)

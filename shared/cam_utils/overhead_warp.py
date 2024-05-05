@@ -36,8 +36,15 @@ if __name__ == "__main__":
     pt = overhead_warp_point(120, 100)
     print(pt)
 
-    img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
+    # img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
+    img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/4128.png")
     img = overhead_warp_img(img)
     cv2.imshow("img", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+    img = cv2.resize(img, (30, 30))
+    img = (img > 0).astype(int)
+    
+    for row in img:
+        print("".join(["[1]," if x[0] else "[0]," for x in row]))
