@@ -50,9 +50,9 @@ class MoeController(GridStateController):
         return angle, speed
 
     def update_gate(self, state):
-        if self.current_expert != self.default_expert:
-            print(str(self.current_expert), str(self.default_expert))
-            return  # already changed expert
+        # if self.current_expert != self.default_expert:
+        #     print(str(self.current_expert), str(self.default_expert))
+        #     return  # already changed expert
 
         left_sign_layer = state.get_layer("left_sign")
         right_sign_layer = state.get_layer("right_sign")

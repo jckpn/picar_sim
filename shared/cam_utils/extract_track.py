@@ -11,24 +11,38 @@ from overhead_warp import overhead_warp_img
 def preview(img):
     return  # comment this line for previews at each step
     img = cv2.resize(img, (320, 320), interpolation=cv2.INTER_NEAREST_EXACT)
-    if len(img.shape) < 3 or img.shape[2] != 3:
+    if len(img.shape) < 3 or img.shape[2] != 3:  # some bw images don't have 3rd axis
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     cv2.imshow("", img)
     cv2.waitKey(0)
-    
-
-def extract_track(img, state_size=30):
-    preview(img)
-    
-    img = overhead_warp_img(img)
-    preview(img)
-    
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    
-    
 
 
 def extract_track_(img, state_size=30):
+    img = overhead_warp_img(img)
+    preview(img)
+
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, (0, 0, 0), (180, 0.2 * 255, 255))
+    img = cv2.bitwise_and(img, img, mask=mask)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    preview(img)
+
+    # split image into cells
+    cell_size = img.shape[0] // state_size
+    track = np.zeros_like(img)
+    for y in range(0, img.shape[0], cell_size):
+        for x in range(0, img.shape[1], cell_size):
+            cell = img[y : y + cell_size, x : x + cell_size]
+            cell_hist = np.histogram(cell, bins=4, range=(0, 255))[0]
+            val = 1 if np.sum(cell_hist[0] + cell_hist[-1] > cell_hist[1:3]) else 0
+            track[y : y + cell_size, x : x + cell_size] = val
+    
+    img = track
+
+    preview(img*255)
+
+
+def extract_track(img, state_size=30):
     img = overhead_warp_img(img)
 
     preview(img)
@@ -78,21 +92,20 @@ def extract_track_(img, state_size=30):
 
 
 if __name__ == "__main__":
-    demo = np.zeros((240*2, 240*8, 3), dtype=np.uint8)
-    for i in range(8):
-        example = np.zeros((240*2, 240, 3), dtype=np.uint8)
-        
+    demo = np.zeros((240 * 2, 240 * 8, 3), dtype=np.uint8)
+    for i in range(1):
+        example = np.zeros((240 * 2, 240, 3), dtype=np.uint8)
+
         id = np.random.randint(1, 13000)
-        # path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{id}.png"
-        path = "/Users/jckpn/Desktop/Screenshot 2024-05-05 at 13.36.32.png"
+        path = f"/Users/jckpn/dev/picar/data/training_data/training_data/{id}.png"
         img = cv2.imread(path)
         track = extract_track(img.copy()) * 255
         img = cv2.resize(img, (240, 240), interpolation=cv2.INTER_NEAREST_EXACT)
         track = cv2.resize(track, (240, 240), interpolation=cv2.INTER_NEAREST_EXACT)
         track = np.stack((track, track, track), axis=-1)
-        
-        demo[:240, i*240:(i+1)*240] = img
-        demo[240:, i*240:(i+1)*240] = track
-    
+
+        demo[:240, i * 240 : (i + 1) * 240] = img
+        demo[240:, i * 240 : (i + 1) * 240] = track
+
     cv2.imshow("demo", demo)
     cv2.waitKey(0)
