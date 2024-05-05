@@ -42,9 +42,3 @@ if __name__ == "__main__":
     cv2.imshow("img", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-    img = cv2.resize(img, (30, 30))
-    img = (img > 0).astype(int)
-    
-    for row in img:
-        print("".join(["[1]," if x[0] else "[0]," for x in row]))
