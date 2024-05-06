@@ -44,11 +44,11 @@ class GridState:
         track_layer = extract_track(img)
         self.set_layer("track", track_layer)
 
-        # obstacles = extract_obstacles(img)
-        # for layer_name, position in obstacles:
-        #     print(layer_name, position)
-        #     x, y = position
-        #     self.state[layer_name][y, x] = 1
+        obstacles = extract_obstacles(img)
+        for layer_name, position in obstacles:
+            # print(layer_name, position)
+            x, y = position
+            self.state[layer_name][y, x] = 1
 
     def observe_sim(self, picar, env, range=60):
         self.reset_state()
@@ -60,8 +60,12 @@ class GridState:
             # get position of object from coords + relative direction
             position = object.center - picar.center
             direction = np.radians(-picar.direction)
-            rotation = np.array([[np.cos(direction), -np.sin(direction)],
-                                 [np.sin(direction), np.cos(direction)]])  # fmt: off
+            rotation = np.array(
+                [
+                    [np.cos(direction), -np.sin(direction)],
+                    [np.sin(direction), np.cos(direction)],
+                ]
+            )
             position = np.dot(rotation, position)
 
             # offset to put picar at bottom-center
@@ -121,8 +125,8 @@ class GridState:
             print()
 
 
-sim_mask = [
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+# fmt: off
+sim_mask = [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
@@ -151,4 +155,14 @@ sim_mask = [
 [0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,],
 [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,],
 [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,],
-[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,]]  # fmt: off
+[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,]]
+# fmt: on
+
+# test real-life observation
+if __name__ == "__main__":
+    import cv2
+
+    img = cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/26.png")
+    state = GridState()
+    state.observe_real(img)
+    state.print()

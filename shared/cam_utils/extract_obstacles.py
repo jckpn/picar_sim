@@ -3,8 +3,9 @@ import cv2
 import tensorflow as tf
 import os
 import sys
-import tflite_runtime.interpreter as tflite
-from pprint import pprint
+
+# import tflite_runtime.interpreter as tflite
+# from pprint import pprint
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from overhead_warp import overhead_warp_point
@@ -14,7 +15,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 try:
     interpreter = tf.lite.Interpreter(
         model_path=os.path.join(CURRENT_DIR, "od_model", "model_edgetpu.tflite"),
-        experimental_delegates=[tflite.load_delegate("libedgetpu.so.1")],
+        experimental_delegates=[tf.lite.experimental.load_delegate("libedgetpu.so.1")],
     )
     print("Using EdgeTPU for object detection")
 except Exception as e:
@@ -30,15 +31,15 @@ SCORE_THRESHOLD = 0.3
 IOU_THRESHOLD = 0.5
 
 class_map = {
+    0: "obstacle",
     1: "obstacle",
-    2: "obstacle",
-    3: "left_arrow",
+    2: "left_sign",
+    3: "obstacle",
     4: "obstacle",
-    5: "obstacle",
-    6: "red_light",
-    7: "right_arrow",
+    5: "red_light",
+    6: "right_sign",
+    7: "obstacle",
     8: "obstacle",
-    9: "obstacle",
 }
 
 
@@ -89,41 +90,40 @@ def extract_obstacles(img, state_size=30):
             }
             results.append(result)
 
-    pprint(results)
+    # pprint(results)
 
     obstacles = []
     for i in range(count):
         if scores[i] < SCORE_THRESHOLD:
-            print("Score too low")
+            # print("Score too low")
             continue
 
         y_min, x_min, y_max, x_max = boxes[i]
 
         # Scale to original image size
-        x_min = x_min * original_size[1]
-        x_max = x_max * original_size[1]
-        y_min = y_min * original_size[0]
-        y_max = y_max * original_size[0]
-
-        # print(original_size)
-        print(x_min, y_min, x_max, y_max)
+        x_min = int(x_min * original_size[1])
+        x_max = int(x_max * original_size[1])
+        y_min = int(y_min * original_size[0])
+        y_max = int(y_max * original_size[0])
 
         # Bottom-center of object for position
         # TODO: Either go up a bit; or change to bounding box IOU outside of state
-        print(f"x: {x_min + (x_max - x_min) // 2}, y: {y_min}")
-        x, y = overhead_warp_point(x_min + (x_max - x_min) // 2, y_min)
-        print(f"Warped x: {x}, y: {y}")
+        x = x_min + (x_max - x_min) // 2
+        y = y_max
+        # print(f"Original x: {x}, y: {y}")
+        x, y = overhead_warp_point(x, y)
+        # print(f"Warped x: {x}, y: {y}")
 
         # Scale to state grid
         x = x / original_size[1] * state_size
         y = y / original_size[0] * state_size
         position = np.array([x, y], dtype=int)
 
-        pprint(f"Grid Position: {position}")
+        # pprint(f"Grid Position: {position}")
 
         # Ignore if out of range
         if position.max() >= state_size or position.min() < 0:
-            print("Out of range")
+            # print("Out of range")
             continue
 
         obstacles.append((class_map[classes[i]], position))
@@ -132,10 +132,6 @@ def extract_obstacles(img, state_size=30):
 
 
 if __name__ == "__main__":
-    obstacles = extract_obstacles(
-        cv2.imread(
-            "/home/dino/picar-sim/label_data/test/New folder2/capture/1714486747745_130_35.png"
-        )
-    )
+    obstacles = extract_obstacles(cv2.imread("data/training_data/training_data/10.png"))
 
     print(obstacles)
