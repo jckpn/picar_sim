@@ -10,9 +10,9 @@ from controllers import GridCaptureController, MouseController
 #    - inference time, and test difference inference times to get goal time
 
 
-SCENE = scenes.Scene11
+SCENE = scenes.Scene7
 MAX_SPEED = 50
-RECORD = False
+RECORD = True
 
 
 def main():

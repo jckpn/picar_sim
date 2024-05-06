@@ -113,19 +113,4 @@ class MoeController(GridStateController):
             }
 
     def get_path_mask(self, state, angle, speed):
-        path_mask = np.zeros((state.size, state.size))
-        lookahead_time = 1
-        path_dist = int(speed * lookahead_time)
-
-        # immediate collisions
-        path_mask[-path_dist // 4 :, 10:20] = 1
-        # imminent collisions
-
-        if angle > 100:
-            path_mask[-path_dist // 2 :, 12:30] = 1
-        elif angle < 80:
-            path_mask[-path_dist // 2 :, 0:18] = 1
-        else:
-            path_mask[-path_dist // 2 :, 10:20] = 1
-
-        return path_mask
+        pass

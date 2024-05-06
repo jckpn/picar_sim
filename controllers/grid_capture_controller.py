@@ -3,8 +3,13 @@
 
 # TODO: note picar should be trained to not move unless track is detected
 
+import os
+import sys
+
+sys.path.append('/Users/jckpn/dev/picar-sim/shared')
+
 from controllers import KeyboardController
-from .grid_state_controller import GridStateController
+from grid_state_controller import GridStateController
 
 
 class GridCaptureController(GridStateController):
@@ -18,6 +23,8 @@ class GridCaptureController(GridStateController):
         angle, speed = self.base_controller.predict_from_state()
         
         track_state = state.get_layer("track")
+        
+        state.print()
 
         if speed > 0:
             self.ready = True  # only start capturing once user started moving

@@ -7,8 +7,8 @@ from grid_state import GridState
 
 
 class GridStateController:
-    def __init__(self, *args, **kwargs):
-        self.state = GridState(*args, **kwargs)
+    def __init__(self, size=30, obstacle_interval=1):
+        self.state = GridState(size, obstacle_interval)
 
     def predict(self, image):  # for use on actual car
         self.state.observe_real(image)
