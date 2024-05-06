@@ -4,7 +4,7 @@ import pandas as pd
 from shared.model import Model
 
 
-samples = 100
+samples = 13000
 model = Model()
 
 csv_path = "data/training_norm.csv"
@@ -26,14 +26,14 @@ for i in range(samples):
 
     angle_square_error += (y[0] - y_hat[0]) ** 2
     speed_square_error += (y[1] - y_hat[1]) ** 2
-    total_square_error += angle_square_error + speed_square_error
+    total_square_error += (y[0] - y_hat[0]) ** 2 + (y[1] - y_hat[1]) ** 2
 
     print(path)
     cv2.imshow("Image", img)
     cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-mse = total_square_error / samples
+mse = total_square_error / samples / 2
 angle_mse = angle_square_error / samples
 speed_mse = speed_square_error / samples
 
