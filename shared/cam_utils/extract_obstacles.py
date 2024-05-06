@@ -1,105 +1,141 @@
 import numpy as np
 import cv2
 import tensorflow as tf
-import keras_cv
 import os
 import sys
+import tflite_runtime.interpreter as tflite
+from pprint import pprint
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from overhead_warp import overhead_warp_point
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+try:
+    interpreter = tf.lite.Interpreter(
+        model_path=os.path.join(CURRENT_DIR, "od_model", "model_edgetpu.tflite"),
+        experimental_delegates=[tflite.load_delegate("libedgetpu.so.1")],
+    )
+    print("Using EdgeTPU for object detection")
+except Exception as e:
+    print(f"Error loading EdgeTPU: {e}")
+    interpreter = tf.lite.Interpreter(
+        model_path=os.path.join(CURRENT_DIR, "od_model", "model.tflite")
+    )
+    print("Using CPU for object detection")
 
-interpreter = tf.lite.Interpreter(model_path=CURRENT_DIR + "/od_model.tflite")
-
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
-interpreter.resize_tensor_input(input_details[0]["index"], (1, 256, 384, 3))
 interpreter.allocate_tensors()
 
-yolomodel = keras_cv.models.YOLOV8Detector(
-    num_classes=9,
-    bounding_box_format="xywh",
-    fpn_depth=2,
-    backbone=keras_cv.models.YOLOV8Backbone.from_preset("yolo_v8_s_backbone"),
-)
-yolomodel.prediction_decoder = keras_cv.layers.NonMaxSuppression(
-    bounding_box_format="xywh",
-    from_logits=True,
-    iou_threshold=0.5,  # Minimum IOU for two boxes to be considered the same
-    confidence_threshold=0.501,  # Minimum confidence for a box to be considered a detection
-    max_detections=8,  # Maximum number of detections to keep
-)
-
-image_size = 384, 256
-validation_resizing = keras_cv.layers.Resizing(
-    width=image_size[0],
-    height=image_size[1],
-    bounding_box_format="xywh",
-    pad_to_aspect_ratio=True,
-)
+SCORE_THRESHOLD = 0.3
+IOU_THRESHOLD = 0.5
 
 class_map = {
-    0: "obstacle",
     1: "obstacle",
-    2: "left_arrow",
-    3: "obstacle",
+    2: "obstacle",
+    3: "left_arrow",
     4: "obstacle",
-    5: "red_light",
-    6: "right_arrow",
-    7: "obstacle",
+    5: "obstacle",
+    6: "red_light",
+    7: "right_arrow",
     8: "obstacle",
+    9: "obstacle",
 }
 
 
+def _preprocess_image(image, input_size):
+    original_h, original_w, _ = image.shape
+    image = tf.image.convert_image_dtype(image, tf.uint8)
+    image = tf.image.resize(image, input_size)
+    image = image[tf.newaxis, :]
+    image = tf.cast(image, dtype=tf.uint8)
+    return image, (original_h, original_w)
+
+
 def extract_obstacles(img, state_size=30):
-    img = validation_resizing([img])
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
 
-    interpreter.set_tensor(input_details[0]["index"], img)
-    interpreter.invoke()
+    _, input_height, input_width, _ = input_details[0]["shape"]
+    processed_img, original_size = _preprocess_image(img, (input_height, input_width))
 
-    y_pred = {
-        "classes": interpreter.get_tensor(output_details[0]["index"]),
-        "boxes": interpreter.get_tensor(output_details[1]["index"]),
-    }
-    y_pred = yolomodel.decode_predictions(y_pred, img)  # decode pred tensor
-    
-    # print(y_pred)
+    signature_fn = interpreter.get_signature_runner()
+    output = signature_fn(images=processed_img)
 
-    boxes = y_pred["boxes"][0].numpy()
-    classes = y_pred["classes"][0].numpy()
+    # pprint(output)
+
+    output_map = {"output_0": 2, "output_1": 0, "output_2": 3, "output_3": 1}
+
+    if output_details[0]["dtype"] == np.uint8:
+        for key, i in output_map.items():
+            output_scale, output_zero_point = output_details[i]["quantization"]
+            output[key] = output[key].astype(np.float32)
+            output[key] = (output[key] - output_zero_point) * output_scale
+
+        output["output_0"] = np.round(output["output_0"]).astype(np.uint8)
+        output["output_2"] = np.round(output["output_2"]).astype(np.uint8)
+
+    count = int(np.squeeze(output["output_0"]))
+    scores = np.squeeze(output["output_1"])
+    classes = np.squeeze(output["output_2"])
+    boxes = np.squeeze(output["output_3"])
+
+    results = []
+    for i in range(count):
+        if scores[i] >= SCORE_THRESHOLD:
+            result = {
+                "bounding_box": boxes[i],
+                "class_id": classes[i],
+                "score": scores[i],
+            }
+            results.append(result)
+
+    pprint(results)
 
     obstacles = []
-    for class_, box in zip(classes, boxes):
-        if class_ < 0:
-            break  # model returns -1 when no more detections
-
-        x, y, w, h = np.array(box, dtype=int)
-        class_name = class_map[class_]
-        
-        # print(class_name, x, y, w, h)
-
-        # got the object from view, now add to state
-        # use bottom-center of object for position
-        x, y = overhead_warp_point(x + w // 2, y + h)  # invert y
-
-        # quantise to state grid
-        x = x / image_size[0] * state_size
-        y = y / image_size[1] * state_size
-        position = np.array([x, y], dtype=int)
-
-        # ignore if out of range
-        if position.max() >= state_size or position.min() < 0:
-            # TODO: ADD TO BORDER INSTEAD OF DISCARDING?
+    for i in range(count):
+        if scores[i] < SCORE_THRESHOLD:
+            print("Score too low")
             continue
 
-        obstacles.append((class_name, position))
+        y_min, x_min, y_max, x_max = boxes[i]
+
+        # Scale to original image size
+        x_min = x_min * original_size[1]
+        x_max = x_max * original_size[1]
+        y_min = y_min * original_size[0]
+        y_max = y_max * original_size[0]
+
+        # print(original_size)
+        print(x_min, y_min, x_max, y_max)
+
+        # Bottom-center of object for position
+        # TODO: Either go up a bit; or change to bounding box IOU outside of state
+        print(f"x: {x_min + (x_max - x_min) // 2}, y: {y_min}")
+        x, y = overhead_warp_point(x_min + (x_max - x_min) // 2, y_min)
+        print(f"Warped x: {x}, y: {y}")
+
+        # Scale to state grid
+        x = x / original_size[1] * state_size
+        y = y / original_size[0] * state_size
+        position = np.array([x, y], dtype=int)
+
+        pprint(f"Grid Position: {position}")
+
+        # Ignore if out of range
+        if position.max() >= state_size or position.min() < 0:
+            print("Out of range")
+            continue
+
+        obstacles.append((class_map[classes[i]], position))
 
     return obstacles
 
 
 if __name__ == "__main__":
-    extract_obstacles(
-        cv2.imread("/Users/jckpn/dev/picar/data/training_data/training_data/9.png")
+    obstacles = extract_obstacles(
+        cv2.imread(
+            "/home/dino/picar-sim/label_data/test/New folder2/capture/1714486747745_130_35.png"
+        )
     )
+
+    print(obstacles)
