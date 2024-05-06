@@ -31,15 +31,15 @@ SCORE_THRESHOLD = 0.3
 IOU_THRESHOLD = 0.5
 
 class_map = {
+    0: "obstacle",
     1: "obstacle",
-    2: "obstacle",
-    3: "left_arrow",
+    2: "left_sign",
+    3: "obstacle",
     4: "obstacle",
-    5: "obstacle",
-    6: "red_light",
-    7: "right_arrow",
+    5: "red_light",
+    6: "right_sign",
+    7: "obstacle",
     8: "obstacle",
-    9: "obstacle",
 }
 
 
@@ -132,10 +132,6 @@ def extract_obstacles(img, state_size=30):
 
 
 if __name__ == "__main__":
-    obstacles = extract_obstacles(
-        cv2.imread(
-            "/home/dino/picar-sim/label_data/test/New folder2/capture/1714486747745_130_35.png"
-        )
-    )
+    obstacles = extract_obstacles(cv2.imread("data/training_data/training_data/10.png"))
 
     print(obstacles)
