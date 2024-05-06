@@ -4,8 +4,8 @@ from .expert_controller import ExpertController
 
 
 class MoeController(GridStateController):
-    def __init__(self, default_expert="follow", smoothing=0.0):
-        super().__init__()
+    def __init__(self, default_expert="follow", smoothing=0.0, obstacle_interval=1):
+        super().__init__(obstacle_interval)
 
         # initialise models
         self.experts = {

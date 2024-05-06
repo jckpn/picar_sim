@@ -7,9 +7,11 @@ from cam_utils import extract_track, extract_obstacles
 
 
 class GridState:
-    def __init__(self, size=30):
+    def __init__(self, size=30, obstacle_interval=1):
         self.size = size
         self.reset_state()
+        
+        self.run_counter = 0
 
     def reset_state(self):
         empty = np.zeros((self.size, self.size))
@@ -39,16 +41,20 @@ class GridState:
         self.state[layer_name] = contents.copy()
 
     def observe_real(self, img):
+        self.run_counter += 1
+        
         self.reset_state()
-
+        
         track_layer = extract_track(img)
         self.set_layer("track", track_layer)
 
-        obstacles = extract_obstacles(img)
-        for layer_name, position in obstacles:
-            # print(layer_name, position)
-            x, y = position
-            self.state[layer_name][y, x] = 1
+        if self.run_counter >= self.obstacle_interval:
+            obstacles = extract_obstacles(img)
+            for layer_name, position in obstacles:
+                # print(layer_name, position)
+                x, y = position
+                self.state[layer_name][y, x] = 1
+            self.run_counter = 0
 
     def observe_sim(self, picar, env, range=60):
         self.reset_state()
