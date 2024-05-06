@@ -5,6 +5,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from grid_state_controller import GridStateController
 from expert_controller import ExpertController
+import state_masks
 
 
 class MoeController(GridStateController):
@@ -13,8 +14,8 @@ class MoeController(GridStateController):
         default_expert="follow",
         smoothing=0.0,
         state_size=30,
-        obstacle_interval=5,
-        gate_reset_delay=100,
+        obstacle_interval=1,
+        gate_reset_delay=1,
         print_state=False,
     ):
         super().__init__(state_size, obstacle_interval)
@@ -72,26 +73,11 @@ class MoeController(GridStateController):
 
         return angle, speed
 
-    def update_gate(self, state):
-        # if self.current_expert != self.default_expert:
-        #     print(str(self.current_expert), str(self.default_expert))
-        #     return  # already changed expert
-
-        left_sign_layer = state.get_layer("left_sign")
-        right_sign_layer = state.get_layer("right_sign")
-
-        if np.sum(left_sign_layer) > 1:
-            self.current_expert = self.experts["left_turns"]
-        elif np.sum(right_sign_layer) > 1:
-            self.current_expert = self.experts["right_turns"]
-        else:
-            self.current_expert = self.default_expert
-
     def check_interventions(self, state, angle, speed):
         # check if any obstacles in collision path
         # calculate path of car from angle
 
-        path_mask = self.get_path_mask(state, angle, speed)
+        path_mask = self.get_path_mask(angle, speed)
 
         obstacle_layer = state.get_layer("obstacle")
         obstacle_layer = obstacle_layer * path_mask  # bitwise and
@@ -102,7 +88,7 @@ class MoeController(GridStateController):
                 "speed": 0,
             }
 
-        # check if any red lights around
+        # check if any red lights within 30cm
         red_light_layer = state.get_layer("red_light")
         red_light_layer = red_light_layer[15:, :]
         if np.sum(red_light_layer) > 0:
@@ -112,5 +98,21 @@ class MoeController(GridStateController):
                 "speed": 0,
             }
 
-    def get_path_mask(self, state, angle, speed):
-        pass
+    def update_gate(self, state):
+        left_sign_layer = state.get_layer("left_sign")
+        right_sign_layer = state.get_layer("right_sign")
+
+        if np.sum(left_sign_layer) > 1:
+            self.current_expert = self.experts["left_turns"]
+        elif np.sum(right_sign_layer) > 1:
+            self.current_expert = self.experts["right_turns"]
+        else:
+            self.current_expert = self.default_expert
+
+    def get_path_mask(self, angle, speed):
+        if angle < 80:
+            return state_masks.left_turn
+        elif angle > 100:
+            return state_masks.right_turn
+        else:
+            return state_masks.straight_path
