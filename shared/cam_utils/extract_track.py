@@ -9,7 +9,8 @@ from overhead_warp import overhead_warp_img
 
 
 def preview(img):
-    return  # comment this line for previews at each step
+    return   # comment out this line for previews
+    
     img = cv2.resize(img, (320, 320), interpolation=cv2.INTER_NEAREST_EXACT)
     if len(img.shape) < 3 or img.shape[2] != 3:  # some bw images don't have 3rd axis
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -38,8 +39,8 @@ def extract_track_(img, state_size=30):
             track[y : y + cell_size, x : x + cell_size] = val
     
     img = track
-
-    preview(img*255)
+    
+    return img
 
 
 def extract_track(img, state_size=30):
