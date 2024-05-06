@@ -1,6 +1,10 @@
 import numpy as np
-from .grid_state_controller import GridStateController
-from .expert_controller import ExpertController
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from grid_state_controller import GridStateController
+from expert_controller import ExpertController
 
 
 class MoeController(GridStateController):

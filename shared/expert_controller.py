@@ -1,6 +1,6 @@
 import numpy as np
-import os
 import tensorflow as tf
+import os
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
