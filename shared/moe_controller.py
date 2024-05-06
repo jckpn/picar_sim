@@ -4,8 +4,16 @@ from .expert_controller import ExpertController
 
 
 class MoeController(GridStateController):
-    def __init__(self, default_expert="follow", smoothing=0.0, obstacle_interval=10):
-        super().__init__(obstacle_interval)
+    def __init__(
+        self,
+        default_expert="follow",
+        smoothing=0.0,
+        state_size=30,
+        obstacle_interval=5,
+        gate_reset_delay=100,
+        print_state=False,
+    ):
+        super().__init__(state_size, obstacle_interval)
 
         # initialise models
         self.experts = {
@@ -21,6 +29,11 @@ class MoeController(GridStateController):
         self.last_angle = 90
         self.last_speed = 0
 
+        self.print_state = print_state
+
+        self.gate_reset_delay = gate_reset_delay
+        self.gate_counter = 0
+
     def predict_from_state(self, state):  # talk about order/priority of operations here
         intervention = self.check_interventions(state, self.last_angle, self.last_speed)
         if intervention is not None:
@@ -33,13 +46,19 @@ class MoeController(GridStateController):
             return intervention["angle"], intervention["speed"]
 
         # if no urgent intervention, get controls as normal
-        self.update_gate(state)
+        self.gate_counter += 1
+        if (
+            self.current_expert == self.default_expert
+            or self.gate_counter >= self.gate_reset_delay
+        ):
+            self.update_gate(state)
+            self.gate_counter = 0
+
         angle, speed = self.current_expert.predict_from_state(state)
 
-        state.print()
-
-        # state.print()
-        print(f"{str(self.current_expert)}: angle={angle}, speed={speed}")
+        if self.print_state:
+            state.print()
+            print(f"{str(self.current_expert)}: angle={angle}, speed={speed}")
 
         # apply smoothing
         if self.smoothing > 0:
@@ -61,6 +80,8 @@ class MoeController(GridStateController):
             self.current_expert = self.experts["left_turns"]
         elif np.sum(right_sign_layer) > 1:
             self.current_expert = self.experts["right_turns"]
+        else:
+            self.current_expert = self.default_expert
 
     def check_interventions(self, state, angle, speed):
         # check if any obstacles in collision path
@@ -91,11 +112,11 @@ class MoeController(GridStateController):
         path_mask = np.zeros((state.size, state.size))
         lookahead_time = 1
         path_dist = int(speed * lookahead_time)
-        
-          # immediate collisions
+
+        # immediate collisions
         path_mask[-path_dist // 4 :, 10:20] = 1
-         # imminent collisions
-         
+        # imminent collisions
+
         if angle > 100:
             path_mask[-path_dist // 2 :, 12:30] = 1
         elif angle < 80:

@@ -4,24 +4,24 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from cam_utils import extract_track, extract_obstacles
+from state_masks import sim_mask
 
 
 class GridState:
-    def __init__(self, size=30, obstacle_interval=1):
+    def __init__(self, size, obstacle_interval):
         self.size = size
+        self.state = {}
         self.reset_state()
-        
+
         self.run_counter = 0
+        self.obstacle_interval = obstacle_interval
+
+    def reset_layer(self, layer_name):
+        self.state[layer_name] = np.zeros((self.size, self.size))
 
     def reset_state(self):
-        empty = np.zeros((self.size, self.size))
-        self.state = {
-            "track": empty.copy(),
-            "obstacle": empty.copy(),
-            "red_light": empty.copy(),
-            "right_sign": empty.copy(),
-            "left_sign": empty.copy(),
-        }
+        for layer_name in ["track", "obstacle", "red_light", "right_sign", "left_sign"]:
+            self.reset_layer(layer_name)
 
     def get_state_dict(self):
         return self.state.copy()
@@ -42,22 +42,28 @@ class GridState:
 
     def observe_real(self, img):
         self.run_counter += 1
-        
-        self.reset_state()
-        
-        track_layer = extract_track(img)
-        self.set_layer("track", track_layer)
 
         if self.run_counter >= self.obstacle_interval:
+            self.reset_state()
             obstacles = extract_obstacles(img)
             for layer_name, position in obstacles:
-                # print(layer_name, position)
                 x, y = position
                 self.state[layer_name][y, x] = 1
             self.run_counter = 0
 
+        track_layer = extract_track(img)
+        self.set_layer("track", track_layer)
+
     def observe_sim(self, picar, env, range=60):
-        self.reset_state()
+        self.run_counter += 1
+
+        update_obstacles = False
+        if self.run_counter >= self.obstacle_interval:
+            update_obstacles = True
+            self.run_counter = 0
+            self.reset_state()
+
+        self.reset_layer("track")
 
         for object in env:
             if object == picar:
@@ -98,8 +104,9 @@ class GridState:
                     "LeftSign": "left_sign",
                 }.get(object_name)
 
-                x, y = position
-                self.state[state_name][y, x] = 1
+                if state_name == "track" or update_obstacles:
+                    x, y = position
+                    self.state[state_name][y, x] = 1
 
             except Exception as e:
                 print(e)
@@ -130,39 +137,6 @@ class GridState:
                 print(px_str, end="")
             print()
 
-
-# fmt: off
-sim_mask = [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
-[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],
-[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],
-[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,],
-[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,],
-[0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,],
-[0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,],
-[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,],
-[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,],
-[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,],
-[0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,],
-[0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,],
-[0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,],
-[0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,],
-[0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,],
-[0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,],
-[0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,],
-[0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,],
-[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,]]
-# fmt: on
 
 # test real-life observation
 if __name__ == "__main__":
