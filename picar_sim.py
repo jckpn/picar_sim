@@ -109,6 +109,12 @@ class PicarSim:
                         pygame.quit()
                         quit()
 
+                # Uncomment to get mouse position in simulator
+                x, y = pygame.mouse.get_pos()
+                x, y = np.array([x, y]) - np.array(self.display.get_size()) // 2
+                x, y = scaler.unscale_coords((x, y))
+                print(f"Mouse position: {x}, {y}")
+
                 # randomly shuffle obstacles if the scene has them
                 # if np.random.rand() < self.update_interval * 0.2:  # every ~5s
                 #     self.reset_objects()
