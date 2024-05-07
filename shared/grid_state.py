@@ -114,7 +114,7 @@ class GridState:
 
         self.state["track"] = self.state["track"] * sim_mask
 
-        # self.simulate_occlusions()
+        self.simulate_occlusions()
 
     def simulate_occlusions(self, bitflips=0.4, rand_occlusions=0.3, rand_dilate=0.2):
         x = self.get_layer("track").flatten()

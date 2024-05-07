@@ -135,10 +135,10 @@ def extract_obstacles(img, state_size=30):
         #     continue
         
         # if beyond distance, add to top of state anyway
-        if y < 0:
-            y = 0
+        # if y < 0:
+        #     y = 0
         
-        if y >= state_size or x < 0 or x >= state_size:
+        if y < 0 or y >= state_size or x < 0 or x >= state_size:
             # print("Out of range")
             continue
         

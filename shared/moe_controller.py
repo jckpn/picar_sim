@@ -14,15 +14,15 @@ class MoeController(GridStateController):
         default_expert="follow",
         smoothing=0.0,
         state_size=30,
-        obstacle_interval=1,
-        gate_reset_delay=1,
+        obstacle_interval=5,  # 
+        gate_reset_delay=1,  # 
         print_state=False,
     ):
         super().__init__(state_size, obstacle_interval)
 
         # initialise models
         self.experts = {
-            "follow": ExpertController("follow_30_v2", steer_only=True),
+            "follow": ExpertController("follow_30", steer_only=True),
             "left_turns": ExpertController("left_30", steer_only=True),
             "right_turns": ExpertController("right_30", steer_only=True),
         }
