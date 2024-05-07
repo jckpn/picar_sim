@@ -9,7 +9,7 @@ from overhead_warp import overhead_warp_img
 
 
 def preview(img):
-    # return  # comment out this line for previews
+    return  # comment out this line for previews
 
     img = cv2.resize(img, (320, 320), interpolation=cv2.INTER_NEAREST_EXACT)
     if len(img.shape) < 3 or img.shape[2] != 3:  # some bw images don't have 3rd axis

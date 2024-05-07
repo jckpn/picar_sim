@@ -34,7 +34,7 @@ IOU_THRESHOLD = 0.5
 
 class_map = {
     0: "obstacle",
-    1: "obstacle",
+    1: "green_light",
     2: "left_sign",
     3: "obstacle",
     4: "obstacle",
@@ -53,6 +53,7 @@ output_map = {"output_0": 2, "output_1": 0, "output_2": 3, "output_3": 1}
 
 
 def _preprocess_image(image, input_size):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     original_h, original_w, _ = image.shape
     image = tf.image.convert_image_dtype(image, tf.uint8)
     image = tf.image.resize(image, input_size)
@@ -106,6 +107,10 @@ def extract_obstacles(img, state_size=30):
         if scores[i] < SCORE_THRESHOLD:
             # print("Score too low")
             continue
+    
+        if class_map[classes[i]] == "green_light":
+            # print(f"Class not in map: {classes[i]}")
+            continue
 
         y_min, x_min, y_max, x_max = boxes[i]
 
@@ -135,12 +140,13 @@ def extract_obstacles(img, state_size=30):
         #     continue
         
         # if beyond distance, add to top of state anyway
-        # if y < 0:
-        #     y = 0
+        if y < 0:
+            y = 0
         
-        if y < 0 or y >= state_size or x < 0 or x >= state_size:
-            # print("Out of range")
+        if y >= state_size or x < 0 or x >= state_size:
             continue
+        
+        print(f"Out of range: {classes[i]}")
         
         position = np.array([x, y], dtype=int)
 

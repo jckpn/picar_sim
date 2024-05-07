@@ -90,7 +90,7 @@ class MoeController(GridStateController):
 
         # check if any red lights within 30cm
         red_light_layer = state.get_layer("red_light")
-        red_light_layer = red_light_layer[15:, :]
+        red_light_layer = red_light_layer[10:, :]
         if np.sum(red_light_layer) > 0:
             return {
                 "message": "RED LIGHT",
