@@ -169,3 +169,5 @@ object_detection*/
 mediapipe*/
 
 tfl/
+
+data/

@@ -31,7 +31,7 @@ angles = [
 ]
 
 # Filter df to only include angle = 0.01
-df = df[df["angle"] == angles[0]]
+# df = df[df["angle"] == angles[0]]
 
 
 total_square_error = 0
@@ -53,8 +53,8 @@ for i in range(samples):
     total_square_error += (y[0] - y_hat[0]) ** 2 + (y[1] - y_hat[1]) ** 2
 
     print(f"{i}/{samples}")
-    cv2.imshow("Image", img)
-    cv2.waitKey(0)
+    # cv2.imshow("Image", img)
+    # cv2.waitKey(0)
 cv2.destroyAllWindows()
 
 mse = total_square_error / samples / 2
