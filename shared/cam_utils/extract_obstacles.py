@@ -13,7 +13,9 @@ from overhead_warp import overhead_warp_point
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 try:
-    interpreter = tf.lite.Interpreter(
+    import tflite_runtime.interpreter as tflite
+
+    interpreter = tflite.Interpreter(
         model_path=os.path.join(CURRENT_DIR, "od_model", "model_edgetpu.tflite"),
         experimental_delegates=[tf.lite.experimental.load_delegate("libedgetpu.so.1")],
     )
@@ -42,6 +44,13 @@ class_map = {
     8: "obstacle",
 }
 
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+_, input_height, input_width, _ = input_details[0]["shape"]
+
+output_map = {"output_0": 2, "output_1": 0, "output_2": 3, "output_3": 1}
+
 
 def _preprocess_image(image, input_size):
     original_h, original_w, _ = image.shape
@@ -53,18 +62,18 @@ def _preprocess_image(image, input_size):
 
 
 def extract_obstacles(img, state_size=30):
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
-    _, input_height, input_width, _ = input_details[0]["shape"]
     processed_img, original_size = _preprocess_image(img, (input_height, input_width))
 
-    signature_fn = interpreter.get_signature_runner()
-    output = signature_fn(images=processed_img)
+    # output = signature_fn(images=processed_img) # Removed by edgetpu_compiler...
+
+    interpreter.set_tensor(input_details[0]["index"], processed_img)
+    interpreter.invoke()
+
+    output = {}
+    for key, i in output_map.items():
+        output[key] = interpreter.get_tensor(output_details[i]["index"])
 
     # pprint(output)
-
-    output_map = {"output_0": 2, "output_1": 0, "output_2": 3, "output_3": 1}
 
     if output_details[0]["dtype"] == np.uint8:
         for key, i in output_map.items():
@@ -103,7 +112,7 @@ def extract_obstacles(img, state_size=30):
         # Scale to original image size
         x_min = int(x_min * original_size[1])
         x_max = int(x_max * original_size[1])
-        y_min = int(y_min * original_size[0])
+        # y_min = int(y_min * original_size[0]) # Unused
         y_max = int(y_max * original_size[0])
 
         # Bottom-center of object for position
@@ -132,6 +141,17 @@ def extract_obstacles(img, state_size=30):
 
 
 if __name__ == "__main__":
-    obstacles = extract_obstacles(cv2.imread("data/training_data/training_data/10.png"))
+    import time
+
+    times = []
+    for i in range(50):
+        t1 = time.time()
+        obstacles = extract_obstacles(cv2.imread("test-imgs/5.png"))
+        t2 = time.time()
+        time_taken = t2 - t1
+        print(f"Time taken: {time_taken*1000}ms")
+        times.append(time_taken)
+
+    print(f"Average time taken: {np.mean(times)*1000}ms")
 
     print(obstacles)

@@ -7,7 +7,7 @@ from moe_controller import MoeController
 
 class Model(MoeController):
     def __init__(self):
-        super().__init__()
+        super().__init__(obstacle_interval=5, print_state=True)
 
         print(
             """
