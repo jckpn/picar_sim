@@ -22,7 +22,7 @@ class MoeController(GridStateController):
 
         # initialise models
         self.experts = {
-            "follow": ExpertController("follow_30", steer_only=True),
+            "follow": ExpertController("follow_30_v2", steer_only=True),
             "left_turns": ExpertController("left_30", steer_only=True),
             "right_turns": ExpertController("right_30", steer_only=True),
         }

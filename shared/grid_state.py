@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import sys
+import cv2
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from cam_utils import extract_track, extract_obstacles
@@ -112,6 +113,32 @@ class GridState:
                 print(e)
 
         self.state["track"] = self.state["track"] * sim_mask
+
+        # self.simulate_occlusions()
+
+    def simulate_occlusions(self, bitflips=0.4, rand_occlusions=0.3, rand_dilate=0.2):
+        x = self.get_layer("track").flatten()
+
+        # random bit flips (i.e. salt and pepper noise)
+        if np.random.rand() < bitflips:
+            for cell in range(len(x)):
+                flip_prob = np.random.rand() * 0.05
+                if np.random.rand() < flip_prob:
+                    x[cell] = 0 if x[cell] == 1 else 1
+
+        grid_size = 30
+        x = x.reshape(grid_size, grid_size)  # tform flattened state data to grid
+
+        # add random block of 1s or 0s to simulate occlusions
+        for _ in range(3):
+            if np.random.rand() < rand_occlusions:
+                occ_w = np.random.randint(2, 10)
+                occ_h = np.random.randint(2, 10)
+                occ_x = np.random.randint(0, x.shape[1] - occ_w)
+                occ_y = np.random.randint(0, x.shape[0] - occ_h)
+                x[occ_y : occ_y + occ_h, occ_x : occ_x + occ_w] = 1 if np.random.rand() < 0.3 else 0
+
+        self.set_layer("track", x)
 
     def print(self):
         img = self.get_state_img()
