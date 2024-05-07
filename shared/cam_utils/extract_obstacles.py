@@ -126,14 +126,23 @@ def extract_obstacles(img, state_size=30):
         # Scale to state grid
         x = x / original_size[1] * state_size
         y = y / original_size[0] * state_size
-        position = np.array([x, y], dtype=int)
 
         # pprint(f"Grid Position: {position}")
 
         # Ignore if out of range
-        if position.max() >= state_size or position.min() < 0:
+        # if position.max() >= state_size or position.min() < 0:
+        #     # print("Out of range")
+        #     continue
+        
+        # if beyond distance, add to top of state anyway
+        if y < 0:
+            y = 0
+        
+        if y >= state_size or x < 0 or x >= state_size:
             # print("Out of range")
             continue
+        
+        position = np.array([x, y], dtype=int)
 
         obstacles.append((class_map[classes[i]], position))
 

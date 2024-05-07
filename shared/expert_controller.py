@@ -39,7 +39,7 @@ class ExpertController:
             x = state.get_layer("track")
             x = np.expand_dims(x, axis=-1)  # reshape track from (30, 30) -> (30, 30, 1)
             if self.crop_track:
-                x = x[20:]  # crop to bottom 1/3 for faster inference
+                x = x[15:]  # crop to bottom 1/2 for faster inference
         else:
             x = state.get_state_img()
 
