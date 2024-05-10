@@ -10,8 +10,8 @@ from controllers import GridCaptureController, MouseController
 #    - inference time, and test difference inference times to get goal time
 
 
-SCENE = scenes.Scene11
-MAX_SPEED = 35
+SCENE = scenes.Scene7
+MAX_SPEED = 50
 RECORD = False
 
 
@@ -21,13 +21,13 @@ def main():
             controller=GridCaptureController(base_controller=MouseController()),
             controller_interval=0.01,  # capture more data
         )
-        sim.set_perspective(sim.picar)  # makes driving easier
     else:
         sim = SCENE(
             controller=MoeController(smoothing=0.0, print_state=True),
-            controller_interval=0.05,  # simulate real-world delay
+            controller_interval=0.025,  # simulate real-world delay
         )
 
+    # sim.set_perspective(sim.picar)  # makes driving easier
     # sim.random_picar_position()  # to train or test recovery ability
 
     sim.picar.set_max_speed(MAX_SPEED)

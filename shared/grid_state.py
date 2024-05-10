@@ -97,6 +97,9 @@ class GridState:
             # add object to state
             try:  # don't want exception to stop loop
                 object_name = object.__class__.__name__
+            
+                print(f"{object_name}: {position}")
+                
                 state_name = {
                     "TrackMaterial": "track",
                     "Obstacle": "obstacle",

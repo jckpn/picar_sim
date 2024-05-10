@@ -7,7 +7,7 @@ class TrackMaterial(SimulatorObject):
             center,
             size=(2, 2),
             direction=0,
-            color=(0, 0, 0),
+            color=(255, 0, 255),
             can_collide=False,
         )
     
