@@ -1,6 +1,5 @@
 import pygame
-import picar_sim.scaler as scaler
-import objects
+import sprites
 import cv2
 import numpy as np
 
@@ -14,15 +13,17 @@ class PicarSim:
         controller_interval=0.1,
         update_interval=0.01,
         graphics=True,
+        graphics_scale=4,
         speed_multiplier=1,
         graphics_perspective=None,
     ):
-        self.picar = objects.Picar(controller)  # keep a pointer to picar for easy access
+        self.picar = sprites.Picar(controller)  # keep a pointer to picar for easy access
         self.env = [track, self.picar]
         self.env_size = env_size
         self.update_interval = update_interval
         self.graphics = graphics
         self.graphics_perspective = graphics_perspective
+        self.graphics_scale = graphics_scale
         self.speed_multiplier = speed_multiplier
 
         self.cvt_track_to_obstacles(track)  # track -> mini obstacles for state capture
@@ -31,7 +32,7 @@ class PicarSim:
         if graphics:
             self.framerate = 1 / update_interval * speed_multiplier
             pygame.init()
-            self.display = pygame.display.set_mode(scaler.scale_coords(env_size))
+            self.display = pygame.display.set_mode(self.scale_coords(env_size))
             self.clock = pygame.time.Clock()
 
     def cvt_track_to_obstacles(self, track, res=1, threshold_color=180):
@@ -50,7 +51,7 @@ class PicarSim:
                     # offset positions to match track object
                     center = np.array([x, y]) * res
                     center -= track.size // 2
-                    track_objects.append(objects.TrackMaterial(center))
+                    track_objects.append(sprites.TrackMaterial(center))
 
         self.add_objects(track_objects)
         print(f"Converted track image to {len(track_objects)} obstacles")
@@ -64,7 +65,7 @@ class PicarSim:
         obstacles = []
         for _ in range(num_obstacles):
             x, y = np.random.randint(x1, x2), np.random.randint(y1, y2)
-            obstacles.append(objects.Obstacle(center=(x, y)))
+            obstacles.append(sprites.Obstacle(center=(x, y)))
             print(f"adding obstacle at {x}, {y}")
         self.add_objects(obstacles)
 
@@ -106,3 +107,19 @@ class PicarSim:
 
                 self.render_env()
                 self.clock.tick(self.framerate)
+
+    def scale_coords(self, coords):
+        if isinstance(coords, tuple):
+            return tuple(self.scale_coords(c) for c in coords)
+        elif isinstance(coords, list):
+            return [self.scale_coords(c) for c in coords]
+        else:
+            return coords * self.graphics_scale
+
+    def unscale_coords(self, coords):
+        if isinstance(coords, tuple):
+            return tuple(self.unscale_coords(c) for c in coords)
+        elif isinstance(coords, list):
+            return [self.unscale_coords(c) for c in coords]
+        else:
+            return coords // self.graphics_scale
