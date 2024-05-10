@@ -1,4 +1,4 @@
-import scenes
+import picar_sim.scenes as scenes
 from shared.model import MoeController
 from controllers import GridCaptureController, MouseController
 
