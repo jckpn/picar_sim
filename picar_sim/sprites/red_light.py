@@ -1,4 +1,4 @@
-from sprites.base import SimulatorObject
+from objects.base import SimulatorObject
 
 
 class RedLight(SimulatorObject):

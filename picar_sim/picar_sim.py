@@ -1,5 +1,5 @@
 import pygame
-import sprites
+import objects
 import cv2
 import numpy as np
 
@@ -17,7 +17,7 @@ class PicarSim:
         speed_multiplier=1,
         graphics_perspective=None,
     ):
-        self.picar = sprites.Picar(controller)  # keep a pointer to picar for easy access
+        self.picar = objects.Picar(controller)  # keep a pointer to picar for easy access
         self.env = [track, self.picar]
         self.env_size = env_size
         self.update_interval = update_interval
@@ -51,7 +51,7 @@ class PicarSim:
                     # offset positions to match track object
                     center = np.array([x, y]) * res
                     center -= track.size // 2
-                    track_objects.append(sprites.TrackMaterial(center))
+                    track_objects.append(objects.TrackMaterial(center))
 
         self.add_objects(track_objects)
         print(f"Converted track image to {len(track_objects)} obstacles")
@@ -65,7 +65,7 @@ class PicarSim:
         obstacles = []
         for _ in range(num_obstacles):
             x, y = np.random.randint(x1, x2), np.random.randint(y1, y2)
-            obstacles.append(sprites.Obstacle(center=(x, y)))
+            obstacles.append(objects.Obstacle(center=(x, y)))
             print(f"adding obstacle at {x}, {y}")
         self.add_objects(obstacles)
 

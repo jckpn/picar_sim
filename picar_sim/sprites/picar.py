@@ -1,4 +1,4 @@
-from sprites.base import SimulatorObject
+from objects.base import SimulatorObject
 import numpy as np
 from controllers import PicarController, KeyboardController
 
@@ -33,18 +33,18 @@ class Picar(SimulatorObject):
     def update(self, dt, env):
         self.update_controls(dt, env)
 
-        # update velocity and position
-        self.velocity = self.speed * np.array(
-            [np.sin(np.radians(self.direction)), -np.cos(np.radians(self.direction))]
-        )
-        self.center += self.velocity * dt
-
         # update angular velocity and direction
         wheel_angle = self.angle - 90  # they use 90 as straight for some reason
         if wheel_angle > 0.01 or wheel_angle < -0.01:  # avoid /0 error
             turn_radius = self.wheelbase / np.tan(np.radians(wheel_angle))
             angular_velocity = np.degrees(self.speed / turn_radius)
             self.direction = (self.direction + angular_velocity * dt) % 360  # 0->360
+
+        # update velocity and position
+        self.velocity = self.speed * np.array(
+            [np.sin(np.radians(self.direction)), -np.cos(np.radians(self.direction))]
+        )
+        self.center += self.velocity * dt
 
     def update_controls(self, dt, env):
         # set new controls only if enough time has elapsed
