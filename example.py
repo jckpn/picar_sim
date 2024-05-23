@@ -17,10 +17,17 @@ class SimpleKeyboardController:
         return angle, speed
 
 
+picar = objects.Picar(controller=SimpleKeyboardController())
+track = objects.Track(image_path="track_oval.png")
+obstacles = [
+    objects.Obstacle(center=(50, 25)),
+    objects.Obstacle(center=(-100, 0)),
+]
+
 sim = PicarSim(
-    picar=objects.Picar(controller=SimpleKeyboardController()),
-    track=objects.Track(image_path="track_oval.png"),
-    obstacles=[],  # add obstacles here
+    picar,
+    track,
+    obstacles,  # add obstacles here
     view_size=(350, 200),  # use None for no graphics
     speed_multiplier=1,
     follow_picar=False,

@@ -13,17 +13,19 @@ class Object:
         size=(20, 20),
         direction=0,
         image_path=None,
-        can_collide=False,
+        color=(255, 0, 255)
     ):
         self.center = np.array(center, dtype=float)
         self.size = np.array(size, dtype=int)
         self.direction = direction
-        self.can_collide = can_collide
-        self.image_path = image_path
-        self.image = pygame.transform.smoothscale(
-            pygame.image.load(os.path.join(IMAGES_DIR, image_path)),
-            size=scale_coords(size),
-        )
+        if image_path is not None:
+            self.image = pygame.transform.smoothscale(
+                pygame.image.load(os.path.join(IMAGES_DIR, image_path)),
+                size=scale_coords(size),
+            )
+        else:
+            self.color = color
+            self.image = None
 
     def update(self, dt, env):
         pass
