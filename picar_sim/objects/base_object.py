@@ -52,11 +52,15 @@ class Object:
         # trying so here's a janky solution that works for the picar
 
         blit_pos, direction = self.get_relative_pos(perspective, display)
-
+        
         if self.image:
             image = pygame.transform.rotate(self.image, -direction)
             rect = image.get_rect(center=blit_pos)
             display.blit(image, rect)
+        else:
+            pygame.draw.circle(
+                display, self.color, blit_pos, scale_coords(self.size[0] // 2)
+            )
 
             # add class name as text
             font = pygame.font.Font(None, 20)

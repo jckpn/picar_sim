@@ -10,9 +10,9 @@ class SimpleKeyboardController:
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             speed = 35
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            angle = 50
+            angle = 55
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            angle = 130
+            angle = 125
 
         return angle, speed
 
@@ -21,8 +21,8 @@ sim = PicarSim(
     picar=objects.Picar(controller=SimpleKeyboardController()),
     track=objects.Track(image_path="track_oval.png"),
     obstacles=[],  # add obstacles here
-    view_size=(300, 200),  # use None for no graphics
-    speed_multiplier=2,
+    view_size=(350, 200),  # use None for no graphics
+    speed_multiplier=1,
     follow_picar=False,
 )
 

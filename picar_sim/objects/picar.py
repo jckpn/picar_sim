@@ -8,11 +8,15 @@ class Picar(Object):
         controller,
         controller_interval=0,  # rate limit controller to simulate inference delay
         center=(0, 0),
-        size=(16, 32),
         direction=0,
-        image_path="picar.png",
+        max_speed=35,
     ):
-        super().__init__(center, size, direction, image_path, can_collide=True)
+        super().__init__(
+            center=center,
+            direction=direction,
+            size=(16, 32),
+            image_path="picar.png",
+        )
 
         # controller variables
         self.controller = controller
@@ -25,7 +29,7 @@ class Picar(Object):
         self.angular_velocity = 0.0
 
         # constants
-        self.max_speed = 35
+        self.max_speed = max_speed
         self.angle_range = (50, 130)
         self.wheelbase = 14.4  # distance between front and back wheels for turn radius
 
@@ -38,7 +42,7 @@ class Picar(Object):
 
         # update angular velocity and direction
         wheel_angle = self.angle - 90  # they use 90 as straight for some reason
-        if wheel_angle > 0.01 or wheel_angle < -0.01:  # avoid /0 error
+        if abs(wheel_angle) > 0.01:  # avoid /0 error
             turn_radius = self.wheelbase / np.tan(np.radians(wheel_angle))
             angular_velocity = np.degrees(self.speed / turn_radius)
             self.direction = (self.direction + angular_velocity * dt) % 360  # 0->360
@@ -56,9 +60,6 @@ class Picar(Object):
         self.angle = np.clip(angle, *self.angle_range)
 
         self.speed = self.speed / 35 * self.max_speed  # scale to max speed
-
-    def set_max_speed(self, max_speed):
-        self.max_speed = max_speed
 
     def check_for_collisions(self, environment):
         if not self.can_collide:
