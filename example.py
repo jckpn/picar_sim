@@ -1,6 +1,7 @@
 from picar_sim import PicarSim, objects
 from keyboard_controller import KeyboardController
 
+
 PicarSim(
     picar=objects.Picar(controller=KeyboardController()),
     track=objects.Track(image_path="track_oval.png"),
