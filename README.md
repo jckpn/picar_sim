@@ -1,3 +1,3 @@
-super epic top secret picar simulator
+A stripped-down version of the simulator developed for the Uni of Nottingham self-driving PiCar project. Made in collaboration with @DoctorDinosaur.
 
-![image](https://github.com/jckpn/picar-sim/assets/14837124/40979a01-18c7-41e6-8d20-d3ea785c9cbd)
+<img src="https://github.com/jckpn/picar_sim/assets/14837124/ed9881c9-c938-412e-88e2-7bfd9418f02a" style="width: 550px; height: 320px;">
