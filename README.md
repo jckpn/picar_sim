@@ -1,4 +1,4 @@
-A stripped-down version of the simulator developed for the Uni of Nottingham self-driving PiCar project. Made in collaboration with @DoctorDinosaur.
+A stripped-down version of the 2D driving simulator developed for a self-driving PiCar project (University of Nottingham, Machine Learning in Science 2024). Made in collaboration with @DoctorDinosaur.
 
 Requires PyGame and Numpy: Run `pip install pygame numpy` in your venv.
 
